@@ -18,7 +18,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
 
-# Session configuration - 30 day persistent cookies (simple & reliable)
+# Session configuration - 30 days persistent
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -171,6 +171,7 @@ def ensure_first_admin():
     conn = get_db()
     admin_count = conn.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
     
+    # Check environment variables for admin
     admin_username = os.environ.get('ADMIN_USERNAME')
     
     if admin_username and admin_count == 0:
@@ -180,6 +181,7 @@ def ensure_first_admin():
             conn.commit()
             print(f"✅ Made user '{user['username']}' an admin (via ADMIN_USERNAME env)")
     
+    # Fallback: make first user admin if no admin exists
     if admin_count == 0:
         first_user = conn.execute('SELECT id, username FROM users ORDER BY id ASC LIMIT 1').fetchone()
         if first_user:
@@ -282,6 +284,7 @@ def signup():
         conn.commit()
         conn.close()
         
+        # Check if this is first user
         ensure_first_admin()
         
         return jsonify({'success': True, 'message': 'Account created successfully'})
@@ -370,6 +373,7 @@ def get_stats():
     
     conn.close()
     
+    # Get bot status
     bot_status = advertiser_service.get_user_status(user_id)
     
     return jsonify({
@@ -404,11 +408,14 @@ def save_tokens():
     data = request.json
     tokens_text = data.get('tokens', '')
     
+    # Parse tokens (one per line)
     tokens = [t.strip() for t in tokens_text.strip().split('\n') if t.strip()]
     
     conn = get_db()
+    # Clear existing tokens
     conn.execute('DELETE FROM user_tokens WHERE user_id = ?', (user_id,))
     
+    # Add new tokens
     for token in tokens:
         masked = mask_token(token)
         conn.execute('INSERT INTO user_tokens (user_id, token, masked_token) VALUES (?, ?, ?)',
@@ -444,11 +451,14 @@ def save_proxies():
     data = request.json
     proxies_text = data.get('proxies', '')
     
+    # Parse proxies (one per line)
     proxies = [p.strip() for p in proxies_text.strip().split('\n') if p.strip()]
     
     conn = get_db()
+    # Clear existing proxies
     conn.execute('DELETE FROM user_proxies WHERE user_id = ?', (user_id,))
     
+    # Add new proxies
     for proxy in proxies:
         conn.execute('INSERT INTO user_proxies (user_id, proxy) VALUES (?, ?)', (user_id, proxy))
     
@@ -625,6 +635,7 @@ def bot_status():
 def start_bot():
     user_id = session['user_id']
     
+    # Check if user has tokens and channels
     conn = get_db()
     tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens WHERE user_id = ?', (user_id,)).fetchone()
     channels = conn.execute('SELECT COUNT(*) as count FROM user_channels WHERE user_id = ?', (user_id,)).fetchone()
@@ -640,6 +651,7 @@ def start_bot():
     if not config or not config['advertisement_message']:
         return jsonify({'success': False, 'message': 'Please set an advertisement message in Settings first'})
     
+    # Start the bot
     try:
         success = run_async(advertiser_service.start_user_advertiser(user_id))
         if success:
@@ -677,6 +689,7 @@ def admin_overview():
     total_tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens').fetchone()['count']
     total_channels = conn.execute('SELECT COUNT(*) as count FROM user_channels').fetchone()['count']
     
+    # Count active advertisers
     active_count = len([u for u in advertiser_service.user_advertisers.values() if u.running])
     
     conn.close()
@@ -788,11 +801,13 @@ def admin_delete_user(user_id):
         conn.close()
         return jsonify({'success': False, 'error': 'Cannot delete admin users'}), 400
     
+    # Stop advertiser first
     try:
         run_async(advertiser_service.stop_user_advertiser(user_id))
     except:
         pass
     
+    # Delete all user data
     conn.execute('DELETE FROM activity_logs WHERE user_id = ?', (user_id,))
     conn.execute('DELETE FROM user_stats WHERE user_id = ?', (user_id,))
     conn.execute('DELETE FROM user_channels WHERE user_id = ?', (user_id,))
