@@ -900,6 +900,95 @@ body {
         width: 100%;
     }
 }
+/* ============================================================================
+   ADD THESE STYLES TO THE END OF style.css (after line 903)
+   Bot Control Panel & Improved Input Styles
+   ============================================================================ */
+
+/* Enhanced Textarea for Messages */
+textarea.form-control,
+textarea.input-field {
+    min-height: 150px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all var(--transition-fast);
+}
+
+textarea.form-control:focus,
+textarea.input-field:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
+    box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+}
+
+/* Enhanced Regular Inputs */
+input.form-control,
+input.input-field,
+.token-input {
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    transition: all var(--transition-fast);
+    width: 100%;
+}
+
+input.form-control:focus,
+input.input-field:focus,
+.token-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
+    box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+}
+
+input.form-control::placeholder,
+textarea.form-control::placeholder,
+.token-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Select Dropdowns */
+select.form-control,
+select.input-field {
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ff88' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 44px;
+}
+
+select.form-control:focus,
+select.input-field:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background-color: var(--bg-secondary);
+    box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+}
+
+/* Bot Control Panel */
 .bot-control-panel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -924,6 +1013,12 @@ body {
     }
 }
 
+.bot-control-full {
+    padding: 40px;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .bot-status-section {
     flex: 1;
     display: flex;
@@ -946,6 +1041,7 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: var(--shadow-glow);
+    flex-shrink: 0;
 }
 
 .bot-icon svg {
@@ -953,6 +1049,17 @@ body {
     height: 28px;
     color: var(--bg-primary);
     stroke-width: 2.5;
+}
+
+.bot-icon-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+}
+
+.bot-icon-large svg {
+    width: 40px;
+    height: 40px;
 }
 
 .bot-status-info h3 {
@@ -1013,10 +1120,49 @@ body {
     gap: 32px;
 }
 
+.bot-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 32px;
+}
+
 .bot-stat-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.bot-stat-card {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bot-stat-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bot-stat-icon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--accent-primary);
+    stroke-width: 2.5;
+}
+
+.bot-stat-content {
+    flex: 1;
 }
 
 .bot-stat-label {
@@ -1034,10 +1180,25 @@ body {
     color: var(--accent-primary);
 }
 
+.bot-stat-value-large {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--accent-primary);
+    line-height: 1;
+    margin-top: 4px;
+}
+
 .bot-actions {
     display: flex;
     gap: 12px;
     flex-shrink: 0;
+}
+
+.bot-actions-large {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
 }
 
 .btn-start-bot {
@@ -1065,6 +1226,82 @@ body {
     transform: translateY(-2px);
 }
 
+.btn-large {
+    padding: 18px 40px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-actions .btn {
+    justify-content: flex-start;
+}
+
+/* User Menu in Sidebar Footer */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-avatar svg {
+    width: 22px;
+    height: 22px;
+    color: var(--accent-primary);
+}
+
+.user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-logout {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: var(--font-display);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--transition-fast);
+    text-align: left;
+}
+
+.btn-logout:hover {
+    color: var(--accent-danger);
+}
+
 /* Responsive */
 @media (max-width: 968px) {
     .bot-control-panel {
@@ -1072,8 +1309,16 @@ body {
         align-items: stretch;
     }
     
+    .bot-control-full {
+        padding: 24px;
+    }
+    
     .bot-stats-mini {
         gap: 16px;
+    }
+    
+    .bot-stats-grid {
+        grid-template-columns: 1fr;
     }
     
     .bot-actions {
@@ -1081,6 +1326,14 @@ body {
     }
     
     .bot-actions button {
+        width: 100%;
+    }
+    
+    .bot-actions-large {
+        flex-direction: column;
+    }
+    
+    .btn-large {
         width: 100%;
     }
 }
