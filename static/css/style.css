@@ -555,6 +555,7 @@ body::before {
     width: 100%;
     padding: 14px 16px;
     font-size: 0.95rem;
+    font-family: inherit;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -568,6 +569,7 @@ body::before {
     outline: none;
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 3px rgba(6, 244, 173, 0.15);
+    background: var(--bg-card);
 }
 
 .form-input::placeholder,
@@ -578,6 +580,7 @@ body::before {
 .form-textarea {
     min-height: 120px;
     resize: vertical;
+    line-height: 1.5;
 }
 
 /* ============================================================================
