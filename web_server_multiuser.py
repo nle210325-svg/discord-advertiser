@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from flask_cors import CORS
+from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -18,11 +19,22 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
 
-# Session configuration - 30 days persistent
+# Session configuration - 100% PERSISTENT (filesystem-backed)
+SESSION_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_sessions')
+os.makedirs(SESSION_DIR, exist_ok=True)
+
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = SESSION_DIR
+app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'advertiser:'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
+
+# Initialize Flask-Session
+Session(app)
 
 # ============================================================================
 # ADVERTISER SERVICE STARTUP
@@ -883,6 +895,7 @@ if __name__ == '__main__':
     print(f"🛡️ Admin Panel: http://localhost:{port}/admin")
     print(f"🔐 Multi-user authentication enabled")
     print(f"💾 Database: advertiser.db (SQLite)")
+    print(f"🔒 Sessions: 100% Persistent (filesystem)")
     print(f"🤖 Bot service: ENABLED")
     print(f"🐛 Debug mode: {debug}")
     print("=" * 60)
