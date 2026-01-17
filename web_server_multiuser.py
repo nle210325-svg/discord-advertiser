@@ -223,12 +223,32 @@ def ensure_first_admin():
     
     admin_count = conn.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
     
+    # Option 1: Check for ADMIN_USERNAME or ADMIN_EMAIL environment variable
+    admin_username = os.environ.get('ADMIN_USERNAME')
+    admin_email = os.environ.get('ADMIN_EMAIL')
+    
+    if admin_username or admin_email:
+        if admin_username:
+            user = conn.execute('SELECT id, username FROM users WHERE username = ?', (admin_username,)).fetchone()
+            if user and admin_count == 0:
+                conn.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user['id'],))
+                conn.commit()
+                print(f"✅ Made user '{user['username']}' an admin (via ADMIN_USERNAME env)")
+        
+        if admin_email and admin_count == 0:
+            user = conn.execute('SELECT id, username FROM users WHERE email = ?', (admin_email,)).fetchone()
+            if user:
+                conn.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user['id'],))
+                conn.commit()
+                print(f"✅ Made user '{user['username']}' an admin (via ADMIN_EMAIL env)")
+    
+    # Option 2: Fallback to first user if no admin exists
     if admin_count == 0:
-        first_user = conn.execute('SELECT id FROM users ORDER BY id LIMIT 1').fetchone()
+        first_user = conn.execute('SELECT id, username FROM users ORDER BY id LIMIT 1').fetchone()
         if first_user:
             conn.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (first_user['id'],))
             conn.commit()
-            print(f"✅ Made user ID {first_user['id']} an admin (first user)")
+            print(f"✅ Made user '{first_user['username']}' (ID {first_user['id']}) an admin (first user)")
     
     conn.close()
 
@@ -263,6 +283,145 @@ def signup_page():
 @admin_required
 def admin_dashboard():
     return render_template('admin.html')
+
+@app.route('/admin/setup')
+def admin_setup_page():
+    """Quick admin setup page for first-time deployment"""
+    conn = get_db()
+    admin_count = conn.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
+    user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+    conn.close()
+    
+    # Only show if no admins exist
+    if admin_count > 0:
+        return redirect(url_for('admin_dashboard'))
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Setup</title>
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                background: #0a0e14;
+                color: #e8eaed;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+            }}
+            .container {{
+                background: #1e252e;
+                padding: 40px;
+                border-radius: 16px;
+                max-width: 500px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            }}
+            h1 {{
+                color: #00ff88;
+                margin: 0 0 20px 0;
+            }}
+            p {{
+                color: #9ca3af;
+                margin: 10px 0;
+            }}
+            input {{
+                width: 100%;
+                padding: 12px;
+                margin: 10px 0;
+                background: #151b23;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                color: #e8eaed;
+                font-size: 15px;
+            }}
+            button {{
+                width: 100%;
+                padding: 14px;
+                background: linear-gradient(135deg, #00ff88, #00d4ff);
+                border: none;
+                border-radius: 8px;
+                color: #0a0e14;
+                font-weight: 600;
+                font-size: 15px;
+                cursor: pointer;
+                margin-top: 20px;
+            }}
+            button:hover {{
+                opacity: 0.9;
+            }}
+            .success {{
+                background: rgba(0,255,136,0.1);
+                border: 1px solid #00ff88;
+                padding: 12px;
+                border-radius: 8px;
+                margin-top: 20px;
+                display: none;
+            }}
+            .error {{
+                background: rgba(255,68,102,0.1);
+                border: 1px solid #ff4466;
+                padding: 12px;
+                border-radius: 8px;
+                margin-top: 20px;
+                display: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🛡️ Admin Setup</h1>
+            <p>No admin users exist yet. Total users: {user_count}</p>
+            <p>Enter your username to become admin:</p>
+            
+            <input type="text" id="username" placeholder="Enter your username" />
+            <button onclick="setupAdmin()">Make Me Admin</button>
+            
+            <div id="success" class="success">
+                ✅ Success! You are now an admin. <a href="/login" style="color: #00ff88;">Login here</a>
+            </div>
+            <div id="error" class="error">
+                ❌ <span id="errorMsg">Error occurred</span>
+            </div>
+        </div>
+        
+        <script>
+            async function setupAdmin() {{
+                const username = document.getElementById('username').value.trim();
+                if (!username) {{
+                    document.getElementById('errorMsg').textContent = 'Please enter your username';
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }}
+                
+                try {{
+                    const response = await fetch('/api/admin/quick-setup', {{
+                        method: 'POST',
+                        headers: {{'Content-Type': 'application/json'}},
+                        body: JSON.stringify({{username}})
+                    }});
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {{
+                        document.getElementById('success').style.display = 'block';
+                        document.getElementById('error').style.display = 'none';
+                    }} else {{
+                        document.getElementById('errorMsg').textContent = data.message || 'Failed to setup admin';
+                        document.getElementById('error').style.display = 'block';
+                        document.getElementById('success').style.display = 'none';
+                    }}
+                }} catch (error) {{
+                    document.getElementById('errorMsg').textContent = 'Connection error';
+                    document.getElementById('error').style.display = 'block';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    '''
 
 # ============================================================================
 # AUTHENTICATION ROUTES
@@ -836,6 +995,41 @@ def get_advertiser_status():
 # ============================================================================
 # ADMIN ROUTES
 # ============================================================================
+
+@app.route('/api/admin/quick-setup', methods=['POST'])
+def admin_quick_setup():
+    """Quick admin setup route - only works if no admins exist"""
+    data = request.json
+    username = data.get('username', '').strip()
+    
+    if not username:
+        return jsonify({'success': False, 'message': 'Username required'}), 400
+    
+    conn = get_db()
+    
+    # Check if any admin exists
+    admin_count = conn.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
+    
+    if admin_count > 0:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Admin already exists'}), 403
+    
+    # Find user by username
+    user = conn.execute('SELECT id, username FROM users WHERE username = ?', (username,)).fetchone()
+    
+    if not user:
+        conn.close()
+        return jsonify({'success': False, 'message': 'User not found. Please sign up first.'}), 404
+    
+    # Make user admin
+    conn.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user['id'],))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'message': f'{user["username"]} is now an admin!'
+    })
 
 @app.route('/api/admin/stats/overview', methods=['GET'])
 @admin_required
