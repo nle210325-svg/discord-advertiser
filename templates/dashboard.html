@@ -5,6 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord Advertiser - Control Panel</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* User Section Styles */
+        .user-section {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar svg {
+            width: 24px;
+            height: 24px;
+            color: var(--bg-primary);
+            stroke-width: 2.5;
+        }
+        
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .user-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .user-action-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+        
+        .user-action-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+        
+        .user-action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-bright);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+        
+        .user-action-btn.logout-btn:hover {
+            background: rgba(255, 68, 102, 0.15);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -79,6 +177,36 @@
         </nav>
         
         <div class="sidebar-footer">
+            <div class="user-section">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name" id="sidebar-username">Loading...</div>
+                        <div class="user-role" id="sidebar-role">User</div>
+                    </div>
+                </div>
+                
+                <div class="user-actions">
+                    <button class="user-action-btn" id="admin-panel-btn" style="display: none;" onclick="location.href='/admin'" title="Admin Panel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </button>
+                    <button class="user-action-btn logout-btn" onclick="handleLogout()" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
             <div class="status-indicator">
                 <div class="status-dot pulsing"></div>
                 <span id="connection-status">Connected</span>
@@ -449,5 +577,48 @@
     <div id="toast" class="toast"></div>
 
     <script src="/static/js/app.js"></script>
+    
+    <script>
+        // Load current user info on page load
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/auth/current');
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    document.getElementById('sidebar-username').textContent = data.user.username;
+                    document.getElementById('sidebar-role').textContent = data.user.is_admin ? 'Admin' : 'User';
+                    
+                    // Show admin panel button if user is admin
+                    if (data.user.is_admin) {
+                        document.getElementById('admin-panel-btn').style.display = 'flex';
+                    }
+                } else {
+                    // Not logged in, redirect to login
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Failed to load user:', error);
+                window.location.href = '/login';
+            }
+        }
+        
+        // Handle logout
+        async function handleLogout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force redirect anyway
+                window.location.href = '/login';
+            }
+        }
+        
+        // Load user info on page load
+        loadCurrentUser();
+    </script>
 </body>
 </html>
