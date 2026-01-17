@@ -864,7 +864,7 @@ if __name__ == '__main__':
     print(f"🛡️ Admin Panel: http://localhost:{port}/admin")
     print(f"🔐 Multi-user authentication enabled")
     print(f"💾 Database: advertiser.db (SQLite)")
-    print(f"🤖 Bot service: DISABLED (upload integrated_advertiser.py to enable)")
+    print(f"🤖 Bot service: ENABLED")
     print(f"🐛 Debug mode: {debug}")
     print("=" * 60)
     
