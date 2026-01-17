@@ -3,77 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Discord Advertiser</title>
-    <link rel="stylesheet" href="/static/css/auth.css">
+    <title>Sign Up - Outsourced Advertising</title>
+    <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="grain-overlay"></div>
-    
     <div class="auth-container">
         <div class="auth-box">
-            <div class="auth-header">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                    </svg>
-                </div>
-                <h1>ADVERTISER<span class="logo-accent">PRO</span></h1>
-                <p class="subtitle">Create your account</p>
+            <div class="auth-logo">
+                <img src="/static/img/logo.png" alt="Outsourced">
+                <h1>OUTSOURCED</h1>
+                <p style="color: var(--text-muted); margin-top: 4px;">Advertising Platform</p>
             </div>
             
-            <form id="signup-form" class="auth-form">
+            <h2 class="auth-title">Create Account</h2>
+            
+            <form id="signup-form">
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username" minlength="3">
-                    <span class="input-hint">At least 3 characters</span>
+                    <label class="form-label">Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="Choose a username" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required autocomplete="email">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6">
-                    <span class="input-hint">At least 6 characters</span>
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Create a password" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirm-password">Confirm Password</label>
-                    <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">
-                    <span class="btn-text">Create Account</span>
-                    <div class="btn-loader"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-large">
+                    Create Account
                 </button>
-                
-                <div class="auth-footer">
-                    <p>Already have an account? <a href="/login">Sign in</a></p>
-                </div>
             </form>
-        </div>
-        
-        <div class="auth-bg">
-            <div class="bg-circle bg-circle-1"></div>
-            <div class="bg-circle bg-circle-2"></div>
-            <div class="bg-circle bg-circle-3"></div>
+            
+            <div class="auth-footer">
+                Already have an account? <a href="/login">Sign in</a>
+            </div>
         </div>
     </div>
     
     <div id="toast" class="toast"></div>
     
     <script>
-        const form = document.getElementById('signup-form');
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const btnText = submitBtn.querySelector('.btn-text');
-        const btnLoader = submitBtn.querySelector('.btn-loader');
-        
-        form.addEventListener('submit', async (e) => {
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
@@ -81,66 +63,36 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            // Validation
             if (password !== confirmPassword) {
                 showToast('Passwords do not match', 'error');
                 return;
             }
             
-            if (username.length < 3) {
-                showToast('Username must be at least 3 characters', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
-            // Show loading
-            submitBtn.disabled = true;
-            btnText.style.opacity = '0';
-            btnLoader.style.display = 'block';
-            
             try {
                 const response = await fetch('/api/auth/signup', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showToast('Account created! Redirecting to login...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 1500);
+                    showToast('Account created! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = '/login', 1500);
                 } else {
                     showToast(data.message || 'Signup failed', 'error');
-                    submitBtn.disabled = false;
-                    btnText.style.opacity = '1';
-                    btnLoader.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Signup error:', error);
                 showToast('Connection error. Please try again.', 'error');
-                submitBtn.disabled = false;
-                btnText.style.opacity = '1';
-                btnLoader.style.display = 'none';
             }
         });
         
-        function showToast(message, type = 'info') {
+        function showToast(message, type) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = `toast ${type} show`;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
     </script>
 </body>
