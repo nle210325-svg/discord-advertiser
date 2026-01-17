@@ -488,7 +488,10 @@ async function refreshBotStatus() {
         const response = await fetch('/api/advertiser/status');
         const data = await response.json();
         
-        updateBotUI(data);
+        // API returns { success: true, status: { running: true, ... } }
+        // Extract the actual status object
+        const status = data.status || data;
+        updateBotUI(status);
     } catch (error) {
         console.error('Failed to refresh bot status:', error);
     }
