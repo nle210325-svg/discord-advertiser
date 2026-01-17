@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Discord Advertiser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .stat-card .change {
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 20px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #1f2937;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7280;
+        }
+
+        td {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .detail-row value {
+            color: #1f2937;
+        }
+
+        .log-entry {
+            padding: 8px;
+            border-left: 3px solid #e5e7eb;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .log-entry.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .log-entry.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .log-entry.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .log-entry .timestamp {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🛡️ Admin Panel</h1>
+                <p style="opacity: 0.9; margin-top: 4px; font-size: 14px;">System Overview & Management</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="location.href='/dashboard'">← Back to Dashboard</button>
+                <button class="btn btn-outline" onclick="location.href='/api/auth/logout'; location.reload();">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="value" id="totalUsers">-</div>
+                <div class="change" id="recentSignups">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Users (24h)</h3>
+                <div class="value" id="activeUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Messages</h3>
+                <div class="value" id="totalMessages">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Tokens</h3>
+                <div class="value" id="totalTokens">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Channels</h3>
+                <div class="value" id="totalChannels">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Running Advertisers</h3>
+                <div class="value" id="runningAdvertisers">-</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="section">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('users')">Users</div>
+                <div class="tab" onclick="switchTab('activity')">Recent Activity</div>
+                <div class="tab" onclick="switchTab('system')">System Info</div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content active" id="usersTab">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <button class="refresh-btn" onclick="loadUsers()">🔄 Refresh</button>
+                </div>
+                <div class="section-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Messages</th>
+                                <th>Tokens</th>
+                                <th>Channels</th>
+                                <th>Last Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="9" class="empty-state">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div class="tab-content" id="activityTab">
+                <div class="section-header">
+                    <h2>Recent Activity</h2>
+                    <button class="refresh-btn" onclick="loadActivity()">🔄 Refresh</button>
+                </div>
+                <div class="section-content" id="activityContent">
+                    <p class="empty-state">Loading...</p>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div class="tab-content" id="systemTab">
+                <div class="section-header">
+                    <h2>System Information</h2>
+                    <button class="refresh-btn" onclick="loadSystemInfo()">🔄 Refresh</button>
+                </div>
+                <div class="section-content" id="systemContent">
+                    <p class="empty-state">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Details</h3>
+                <button class="btn btn-sm" onclick="closeUserModal()">✕</button>
+            </div>
+            <div class="modal-body" id="userModalBody">
+                Loading...
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm" onclick="closeUserModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            if (tabName === 'users') loadUsers();
+            if (tabName === 'activity') loadActivity();
+            if (tabName === 'system') loadSystemInfo();
+        }
+
+        // Load overview stats
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/admin/stats/overview');
+                const data = await response.json();
+                
+                document.getElementById('totalUsers').textContent = data.total_users.toLocaleString();
+                document.getElementById('activeUsers').textContent = data.active_users.toLocaleString();
+                document.getElementById('totalMessages').textContent = data.total_messages.toLocaleString();
+                document.getElementById('totalTokens').textContent = data.total_tokens.toLocaleString();
+                document.getElementById('totalChannels').textContent = data.total_channels.toLocaleString();
+                document.getElementById('runningAdvertisers').textContent = data.running_advertisers.toLocaleString();
+                document.getElementById('recentSignups').textContent = `+${data.recent_signups} new (7 days)`;
+            } catch (error) {
+                console.error('Failed to load overview:', error);
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('usersTableBody');
+                
+                if (data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No users found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>
+                            ${user.username}
+                            ${user.is_admin ? '<span class="badge badge-info">Admin</span>' : ''}
+                        </td>
+                        <td>${user.email}</td>
+                        <td>
+                            ${user.advertiser_running ? 
+                                `<span class="badge badge-success">Running (${user.active_tokens})</span>` : 
+                                '<span class="badge badge-danger">Stopped</span>'}
+                        </td>
+                        <td>${user.total_sent.toLocaleString()}</td>
+                        <td>${user.token_count}</td>
+                        <td>${user.channel_count}</td>
+                        <td>${user.last_activity ? new Date(user.last_activity).toLocaleString() : 'Never'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-primary" onclick="viewUser(${user.id})">View</button>
+                                ${user.advertiser_running ? 
+                                    `<button class="btn btn-sm btn-danger" onclick="stopUserAdvertiser(${user.id})">Stop</button>` : ''}
+                                ${!user.is_admin ? 
+                                    `<button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">Delete</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+
+        // View user details
+        async function viewUser(userId) {
+            try {
+                const response = await fetch(`/api/admin/user/${userId}`);
+                const data = await response.json();
+                
+                const modalBody = document.getElementById('userModalBody');
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">User Information</h4>
+                        <div class="detail-row">
+                            <label>Username:</label>
+                            <value>${data.user.username}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Email:</label>
+                            <value>${data.user.email}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Created:</label>
+                            <value>${new Date(data.user.created_at).toLocaleString()}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Admin:</label>
+                            <value>${data.user.is_admin ? 'Yes' : 'No'}</value>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">Statistics</h4>
+                        <div class="detail-row">
+                            <label>Total Messages:</label>
+                            <value>${data.stats.total_sent.toLocaleString()}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Last Activity:</label>
+                            <value>${data.stats.last_activity ? new Date(data.stats.last_activity).toLocaleString() : 'Never'}</value>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">Configuration</h4>
+                        <div class="detail-row">
+                            <label>Interval:</label>
+                            <value>${data.config.interval_minutes} minutes</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Default Cooldown:</label>
+                            <value>${data.config.default_cooldown} minutes</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Use Proxies:</label>
+                            <value>${data.config.use_proxies ? 'Yes' : 'No'}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Message Length:</label>
+                            <value>${data.config.message_length} chars</value>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">Resources</h4>
+                        <div class="detail-row">
+                            <label>Tokens:</label>
+                            <value>${data.tokens.length}</value>
+                        </div>
+                        <div class="detail-row">
+                            <label>Channels:</label>
+                            <value>${data.channels.length}</value>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="margin-bottom: 10px;">Recent Activity</h4>
+                        ${data.recent_logs.slice(0, 10).map(log => `
+                            <div class="log-entry ${log.level.toLowerCase()}">
+                                <div class="timestamp">${new Date(log.timestamp).toLocaleString()}</div>
+                                <div>${log.message}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('userModal').classList.add('active');
+            } catch (error) {
+                alert('Failed to load user details');
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('active');
+        }
+
+        // Stop user advertiser
+        async function stopUserAdvertiser(userId) {
+            if (!confirm('Stop this user\'s advertiser?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/user/${userId}/stop-advertiser`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Advertiser stopped');
+                    loadUsers();
+                    loadOverview();
+                } else {
+                    alert('Failed to stop advertiser');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Delete user
+        async function deleteUser(userId, username) {
+            if (!confirm(`Delete user "${username}" and all their data? This cannot be undone!`)) return;
+            
+            try {
+                const response = await fetch(`/api/admin/user/${userId}/delete`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('User deleted successfully');
+                    loadUsers();
+                    loadOverview();
+                } else {
+                    alert(data.error || 'Failed to delete user');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load activity
+        async function loadActivity() {
+            try {
+                const response = await fetch('/api/admin/activity/recent?limit=50');
+                const data = await response.json();
+                
+                const content = document.getElementById('activityContent');
+                
+                if (data.logs.length === 0) {
+                    content.innerHTML = '<p class="empty-state">No activity yet</p>';
+                    return;
+                }
+                
+                content.innerHTML = data.logs.map(log => `
+                    <div class="log-entry ${log.level.toLowerCase()}">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <strong>${log.username}</strong>
+                            <span class="timestamp">${new Date(log.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div>${log.message}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load activity:', error);
+            }
+        }
+
+        // Load system info
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/api/admin/system/info');
+                const data = await response.json();
+                
+                const content = document.getElementById('systemContent');
+                content.innerHTML = `
+                    <div class="detail-row">
+                        <label>Python Version:</label>
+                        <value>${data.python_version}</value>
+                    </div>
+                    <div class="detail-row">
+                        <label>Platform:</label>
+                        <value>${data.platform} ${data.platform_release}</value>
+                    </div>
+                    <div class="detail-row">
+                        <label>Database Size:</label>
+                        <value>${(data.database_size / 1024 / 1024).toFixed(2)} MB</value>
+                    </div>
+                    <div class="detail-row">
+                        <label>Debug Mode:</label>
+                        <value>${data.flask_debug ? 'Enabled' : 'Disabled'}</value>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load system info:', error);
+            }
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            loadOverview();
+            const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
+            if (activeTab === 'users') loadUsers();
+            if (activeTab === 'recent activity') loadActivity();
+        }, 30000);
+
+        // Initial load
+        loadOverview();
+        loadUsers();
+    </script>
+</body>
+</html>

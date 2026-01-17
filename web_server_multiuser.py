@@ -7,8 +7,13 @@ from datetime import datetime, timedelta
 import secrets
 import sqlite3
 from functools import wraps
+import asyncio
+import threading
+import sys
+import platform
 
-import os
+# Import advertiser service
+from integrated_advertiser import advertiser_service
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -16,11 +21,45 @@ CORS(app)
 
 # Session configuration
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# Database initialization
+# ============================================================================
+# ADVERTISER SERVICE STARTUP
+# ============================================================================
+
+advertiser_loop = None
+advertiser_thread = None
+
+def start_advertiser_service():
+    """Start the advertiser service in a background thread"""
+    global advertiser_loop, advertiser_thread
+    
+    def run_loop():
+        global advertiser_loop
+        advertiser_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(advertiser_loop)
+        advertiser_loop.run_forever()
+    
+    advertiser_thread = threading.Thread(target=run_loop, daemon=True)
+    advertiser_thread.start()
+    print("✅ Advertiser service started in background")
+
+# Start service when Flask starts
+start_advertiser_service()
+
+def run_async(coro):
+    """Helper to run async functions from sync Flask routes"""
+    if advertiser_loop:
+        future = asyncio.run_coroutine_threadsafe(coro, advertiser_loop)
+        return future.result(timeout=30)
+    return None
+
+# ============================================================================
+# DATABASE INITIALIZATION
+# ============================================================================
+
 def init_db():
     conn = sqlite3.connect('advertiser.db')
     c = conn.cursor()
@@ -35,7 +74,7 @@ def init_db():
         is_admin BOOLEAN DEFAULT 0
     )''')
     
-    # User configs table (per-user settings)
+    # User configs table
     c.execute('''CREATE TABLE IF NOT EXISTS user_configs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -110,16 +149,16 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize database on startup
-init_db()
-
 # Database helper functions
 def get_db():
     conn = sqlite3.connect('advertiser.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-# Authentication decorator
+# ============================================================================
+# AUTHENTICATION DECORATORS
+# ============================================================================
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -128,7 +167,20 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Utility functions
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Authentication required'}), 401
+        if not session.get('is_admin'):
+            return jsonify({'error': 'Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
 def mask_token(token):
     if len(token) > 20:
         return f"{token[:10]}...{token[-10:]}"
@@ -142,7 +194,6 @@ def get_user_config(user_id):
     if config:
         return dict(config)
     else:
-        # Create default config
         conn = get_db()
         conn.execute('''INSERT INTO user_configs (user_id, advertisement_message, interval_minutes, 
                         default_cooldown, use_proxies, keep_tokens_online, online_status)
@@ -166,7 +217,25 @@ def add_log(user_id, level, message, details=None):
     conn.commit()
     conn.close()
 
-# Auth routes
+def ensure_first_admin():
+    """Make the first registered user an admin if no admins exist"""
+    conn = get_db()
+    
+    admin_count = conn.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
+    
+    if admin_count == 0:
+        first_user = conn.execute('SELECT id FROM users ORDER BY id LIMIT 1').fetchone()
+        if first_user:
+            conn.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (first_user['id'],))
+            conn.commit()
+            print(f"✅ Made user ID {first_user['id']} an admin (first user)")
+    
+    conn.close()
+
+# ============================================================================
+# PAGE ROUTES
+# ============================================================================
+
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -190,6 +259,15 @@ def signup_page():
         return redirect(url_for('index'))
     return render_template('signup.html')
 
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    return render_template('admin.html')
+
+# ============================================================================
+# AUTHENTICATION ROUTES
+# ============================================================================
+
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
     data = request.json
@@ -197,7 +275,6 @@ def signup():
     email = data.get('email', '').strip()
     password = data.get('password', '')
     
-    # Validation
     if not username or not email or not password:
         return jsonify({'success': False, 'message': 'All fields are required'}), 400
     
@@ -207,7 +284,6 @@ def signup():
     if len(password) < 6:
         return jsonify({'success': False, 'message': 'Password must be at least 6 characters'}), 400
     
-    # Check if user exists
     conn = get_db()
     existing = conn.execute('SELECT id FROM users WHERE username = ? OR email = ?', 
                            (username, email)).fetchone()
@@ -216,16 +292,13 @@ def signup():
         conn.close()
         return jsonify({'success': False, 'message': 'Username or email already exists'}), 400
     
-    # Create user
     password_hash = generate_password_hash(password)
     try:
         cursor = conn.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
                             (username, email, password_hash))
         user_id = cursor.lastrowid
         
-        # Initialize user stats
         conn.execute('INSERT INTO user_stats (user_id, total_sent) VALUES (?, 0)', (user_id,))
-        
         conn.commit()
         conn.close()
         
@@ -251,7 +324,6 @@ def login():
     if not user or not check_password_hash(user['password_hash'], password):
         return jsonify({'success': False, 'message': 'Invalid username or password'}), 401
     
-    # Create session
     session.permanent = True
     session['user_id'] = user['id']
     session['username'] = user['username']
@@ -293,7 +365,10 @@ def current_user():
         })
     return jsonify({'success': False, 'message': 'User not found'}), 404
 
-# Config routes
+# ============================================================================
+# CONFIG ROUTES
+# ============================================================================
+
 @app.route('/api/config', methods=['GET'])
 @login_required
 def get_config():
@@ -326,7 +401,6 @@ def update_config():
     
     conn = get_db()
     
-    # Update config
     updates = []
     params = []
     
@@ -364,7 +438,10 @@ def update_config():
     add_log(user_id, 'INFO', 'Configuration updated')
     return jsonify({'success': True, 'message': 'Configuration updated'})
 
-# Tokens routes
+# ============================================================================
+# TOKENS ROUTES
+# ============================================================================
+
 @app.route('/api/tokens', methods=['GET'])
 @login_required
 def get_tokens():
@@ -387,11 +464,8 @@ def update_tokens():
     valid_tokens = [t.strip() for t in tokens if len(t.strip()) > 20]
     
     conn = get_db()
-    
-    # Clear existing tokens
     conn.execute('DELETE FROM user_tokens WHERE user_id = ?', (user_id,))
     
-    # Add new tokens
     for token in valid_tokens:
         masked = mask_token(token)
         conn.execute('INSERT INTO user_tokens (user_id, token, masked_token) VALUES (?, ?, ?)',
@@ -406,7 +480,6 @@ def update_tokens():
 @app.route('/api/tokens/raw', methods=['GET'])
 @login_required
 def get_raw_tokens():
-    """Get actual tokens for the bot to use"""
     user_id = session['user_id']
     conn = get_db()
     tokens = conn.execute('SELECT token FROM user_tokens WHERE user_id = ?', 
@@ -415,7 +488,10 @@ def get_raw_tokens():
     
     return jsonify({'tokens': [t['token'] for t in tokens]})
 
-# Proxies routes
+# ============================================================================
+# PROXIES ROUTES
+# ============================================================================
+
 @app.route('/api/proxies', methods=['GET'])
 @login_required
 def get_proxies():
@@ -437,11 +513,8 @@ def update_proxies():
     valid_proxies = [p.strip() for p in proxies if p.strip()]
     
     conn = get_db()
-    
-    # Clear existing proxies
     conn.execute('DELETE FROM user_proxies WHERE user_id = ?', (user_id,))
     
-    # Add new proxies
     for proxy in valid_proxies:
         conn.execute('INSERT INTO user_proxies (user_id, proxy) VALUES (?, ?)',
                     (user_id, proxy))
@@ -452,7 +525,10 @@ def update_proxies():
     add_log(user_id, 'INFO', f'Updated proxies', {'count': len(valid_proxies)})
     return jsonify({'success': True, 'message': f'Saved {len(valid_proxies)} proxies'})
 
-# Channels routes
+# ============================================================================
+# CHANNELS ROUTES
+# ============================================================================
+
 @app.route('/api/channels', methods=['GET'])
 @login_required
 def get_channels():
@@ -462,7 +538,6 @@ def get_channels():
                            (user_id,)).fetchall()
     conn.close()
     
-    # Organize by token index
     token_channels = {}
     channel_cooldowns = {}
     
@@ -490,7 +565,6 @@ def add_channel():
     
     conn = get_db()
     
-    # Check if already exists
     existing = conn.execute('SELECT id FROM user_channels WHERE user_id = ? AND token_index = ? AND channel_id = ?',
                            (user_id, token_index, channel_id)).fetchone()
     
@@ -539,7 +613,10 @@ def set_channel_cooldown():
     
     return jsonify({'success': True, 'message': f'Cooldown set to {cooldown} minutes'})
 
-# Servers routes
+# ============================================================================
+# SERVERS ROUTES
+# ============================================================================
+
 @app.route('/api/servers', methods=['GET'])
 @login_required
 def get_servers():
@@ -560,7 +637,6 @@ def add_server():
     
     conn = get_db()
     
-    # Check if exists
     existing = conn.execute('SELECT id FROM user_servers WHERE user_id = ? AND server_id = ?',
                            (user_id, server_id)).fetchone()
     
@@ -592,7 +668,10 @@ def remove_server():
     add_log(user_id, 'INFO', f'Removed server {server_id}')
     return jsonify({'success': True, 'message': 'Server removed'})
 
-# Stats routes
+# ============================================================================
+# STATS ROUTES
+# ============================================================================
+
 @app.route('/api/stats', methods=['GET'])
 @login_required
 def get_stats():
@@ -600,10 +679,8 @@ def get_stats():
     
     conn = get_db()
     
-    # Get user stats
     stats = conn.execute('SELECT * FROM user_stats WHERE user_id = ?', (user_id,)).fetchone()
     
-    # Get counts
     token_count = conn.execute('SELECT COUNT(*) as count FROM user_tokens WHERE user_id = ?', 
                                (user_id,)).fetchone()['count']
     channel_count = conn.execute('SELECT COUNT(*) as count FROM user_channels WHERE user_id = ?', 
@@ -613,17 +690,18 @@ def get_stats():
     proxy_count = conn.execute('SELECT COUNT(*) as count FROM user_proxies WHERE user_id = ?', 
                                (user_id,)).fetchone()['count']
     
-    # Get config
     config = get_user_config(user_id)
     
     conn.close()
     
-    # Calculate uptime (mock - in real scenario, track when bot started)
+    # Get advertiser status
+    advertiser_status = advertiser_service.get_user_status(user_id)
+    
     uptime = "0h 0m"
     
     return jsonify({
         'total_sent': stats['total_sent'] if stats else 0,
-        'active_tokens': 0,  # This would be updated by the bot
+        'active_tokens': advertiser_status['active_tokens'],
         'total_tokens': token_count,
         'total_channels': channel_count,
         'total_servers': server_count,
@@ -656,7 +734,10 @@ def increment_stats():
     
     return jsonify({'success': True})
 
-# Logs routes
+# ============================================================================
+# LOGS ROUTES
+# ============================================================================
+
 @app.route('/api/logs', methods=['GET'])
 @login_required
 def get_logs():
@@ -686,15 +767,310 @@ def add_log_api():
     
     return jsonify({'success': True})
 
+# ============================================================================
+# ADVERTISER CONTROL ROUTES
+# ============================================================================
+
+@app.route('/api/advertiser/start', methods=['POST'])
+@login_required
+def start_advertiser():
+    user_id = session['user_id']
+    
+    try:
+        success = run_async(advertiser_service.start_user_advertiser(user_id))
+        
+        if success:
+            add_log(user_id, 'SUCCESS', 'Advertiser started')
+            return jsonify({
+                'success': True,
+                'message': 'Advertiser started successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to start advertiser. Check your configuration.'
+            }), 400
+    except Exception as e:
+        add_log(user_id, 'ERROR', 'Failed to start advertiser', {'error': str(e)})
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/api/advertiser/stop', methods=['POST'])
+@login_required
+def stop_advertiser():
+    user_id = session['user_id']
+    
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+        
+        add_log(user_id, 'INFO', 'Advertiser stopped')
+        return jsonify({
+            'success': True,
+            'message': 'Advertiser stopped successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/api/advertiser/status', methods=['GET'])
+@login_required
+def get_advertiser_status():
+    user_id = session['user_id']
+    
+    try:
+        status = advertiser_service.get_user_status(user_id)
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+# ============================================================================
+# ADMIN ROUTES
+# ============================================================================
+
+@app.route('/api/admin/stats/overview', methods=['GET'])
+@admin_required
+def admin_overview():
+    conn = get_db()
+    
+    total_users = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+    
+    # Active users (last 24 hours)
+    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+    active_users = conn.execute(
+        'SELECT COUNT(DISTINCT user_id) as count FROM user_stats WHERE last_activity > ?',
+        (yesterday,)
+    ).fetchone()['count']
+    
+    # Recent signups (last 7 days)
+    week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+    recent_signups = conn.execute(
+        'SELECT COUNT(*) as count FROM users WHERE created_at > ?',
+        (week_ago,)
+    ).fetchone()['count']
+    
+    # Total messages
+    total_messages = conn.execute('SELECT SUM(total_sent) as sum FROM user_stats').fetchone()['sum'] or 0
+    
+    # Total tokens
+    total_tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens').fetchone()['count']
+    
+    # Total channels
+    total_channels = conn.execute('SELECT COUNT(*) as count FROM user_channels').fetchone()['count']
+    
+    conn.close()
+    
+    # Running advertisers
+    running_advertisers = len([uid for uid, adv in advertiser_service.advertisers.items() if adv.running])
+    
+    return jsonify({
+        'total_users': total_users,
+        'active_users': active_users,
+        'recent_signups': recent_signups,
+        'total_messages': total_messages,
+        'total_tokens': total_tokens,
+        'total_channels': total_channels,
+        'running_advertisers': running_advertisers
+    })
+
+@app.route('/api/admin/users', methods=['GET'])
+@admin_required
+def admin_users():
+    conn = get_db()
+    
+    users = conn.execute('''
+        SELECT u.*, 
+               COALESCE(s.total_sent, 0) as total_sent,
+               s.last_activity,
+               (SELECT COUNT(*) FROM user_tokens WHERE user_id = u.id) as token_count,
+               (SELECT COUNT(*) FROM user_channels WHERE user_id = u.id) as channel_count
+        FROM users u
+        LEFT JOIN user_stats s ON u.id = s.user_id
+        ORDER BY u.id
+    ''').fetchall()
+    
+    conn.close()
+    
+    user_list = []
+    for user in users:
+        advertiser_status = advertiser_service.get_user_status(user['id'])
+        
+        user_list.append({
+            'id': user['id'],
+            'username': user['username'],
+            'email': user['email'],
+            'is_admin': bool(user['is_admin']),
+            'created_at': user['created_at'],
+            'total_sent': user['total_sent'],
+            'last_activity': user['last_activity'],
+            'token_count': user['token_count'],
+            'channel_count': user['channel_count'],
+            'advertiser_running': advertiser_status['running'],
+            'active_tokens': advertiser_status['active_tokens']
+        })
+    
+    return jsonify({'users': user_list})
+
+@app.route('/api/admin/user/<int:user_id>', methods=['GET'])
+@admin_required
+def admin_user_details(user_id):
+    conn = get_db()
+    
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({'error': 'User not found'}), 404
+    
+    stats = conn.execute('SELECT * FROM user_stats WHERE user_id = ?', (user_id,)).fetchone()
+    config = conn.execute('SELECT * FROM user_configs WHERE user_id = ?', (user_id,)).fetchone()
+    
+    tokens = conn.execute('SELECT masked_token FROM user_tokens WHERE user_id = ?', (user_id,)).fetchall()
+    channels = conn.execute('SELECT * FROM user_channels WHERE user_id = ?', (user_id,)).fetchall()
+    
+    recent_logs = conn.execute(
+        'SELECT * FROM activity_logs WHERE user_id = ? ORDER BY timestamp DESC LIMIT 20',
+        (user_id,)
+    ).fetchall()
+    
+    conn.close()
+    
+    return jsonify({
+        'user': {
+            'id': user['id'],
+            'username': user['username'],
+            'email': user['email'],
+            'is_admin': bool(user['is_admin']),
+            'created_at': user['created_at']
+        },
+        'stats': {
+            'total_sent': stats['total_sent'] if stats else 0,
+            'last_activity': stats['last_activity'] if stats else None
+        },
+        'config': {
+            'interval_minutes': config['interval_minutes'] if config else 60,
+            'default_cooldown': config['default_cooldown'] if config else 60,
+            'use_proxies': bool(config['use_proxies']) if config else False,
+            'message_length': len(config['advertisement_message'] or '') if config else 0
+        },
+        'tokens': [t['masked_token'] for t in tokens],
+        'channels': [dict(c) for c in channels],
+        'recent_logs': [{
+            'timestamp': log['timestamp'],
+            'level': log['level'],
+            'message': log['message']
+        } for log in recent_logs]
+    })
+
+@app.route('/api/admin/user/<int:user_id>/stop-advertiser', methods=['POST'])
+@admin_required
+def admin_stop_user_advertiser(user_id):
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+        return jsonify({'success': True, 'message': 'Advertiser stopped'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/user/<int:user_id>/delete', methods=['DELETE'])
+@admin_required
+def admin_delete_user(user_id):
+    # Don't allow deleting admins
+    conn = get_db()
+    user = conn.execute('SELECT is_admin FROM users WHERE id = ?', (user_id,)).fetchone()
+    
+    if not user:
+        conn.close()
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    if user['is_admin']:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Cannot delete admin users'}), 403
+    
+    # Stop advertiser first
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+    except:
+        pass
+    
+    # Delete user (CASCADE will handle related tables)
+    conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'message': 'User deleted successfully'})
+
+@app.route('/api/admin/activity/recent', methods=['GET'])
+@admin_required
+def admin_recent_activity():
+    limit = int(request.args.get('limit', 50))
+    
+    conn = get_db()
+    logs = conn.execute('''
+        SELECT a.*, u.username
+        FROM activity_logs a
+        JOIN users u ON a.user_id = u.id
+        ORDER BY a.timestamp DESC
+        LIMIT ?
+    ''', (limit,)).fetchall()
+    conn.close()
+    
+    return jsonify({
+        'logs': [{
+            'username': log['username'],
+            'level': log['level'],
+            'message': log['message'],
+            'timestamp': log['timestamp']
+        } for log in logs]
+    })
+
+@app.route('/api/admin/system/info', methods=['GET'])
+@admin_required
+def admin_system_info():
+    # Get database size
+    db_size = 0
+    try:
+        db_size = os.path.getsize('advertiser.db')
+    except:
+        pass
+    
+    return jsonify({
+        'python_version': sys.version.split()[0],
+        'platform': platform.system(),
+        'platform_release': platform.release(),
+        'database_size': db_size,
+        'flask_debug': app.debug
+    })
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
 if __name__ == '__main__':
     print("=" * 60)
     print("🌐 Multi-User Discord Advertiser Dashboard")
     print("=" * 60)
-    print(f"📡 Server starting on http://0.0.0.0:5000")
-    print(f"🎨 Dashboard: http://localhost:5000")
-    print(f"🔐 Multi-user authentication enabled")
-    print(f"💾 Database: advertiser.db (SQLite)")
-    print("=" * 60)
+    
+    init_db()
+    ensure_first_admin()
     
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
+    print(f"📡 Server starting on port {port}")
+    print(f"🎨 Dashboard: http://localhost:{port}")
+    print(f"🛡️ Admin Panel: http://localhost:{port}/admin")
+    print(f"🔐 Multi-user authentication enabled")
+    print(f"💾 Database: advertiser.db (SQLite)")
+    print(f"🤖 Background advertiser: ENABLED")
+    print(f"🐛 Debug mode: {debug}")
+    print("=" * 60)
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)
