@@ -405,10 +405,13 @@ def get_tokens():
 def save_tokens():
     user_id = session['user_id']
     data = request.json
-    tokens_text = data.get('tokens', '')
+    tokens_input = data.get('tokens', '')
     
-    # Parse tokens (one per line)
-    tokens = [t.strip() for t in tokens_text.strip().split('\n') if t.strip()]
+    # Handle both string and list input
+    if isinstance(tokens_input, list):
+        tokens = [t.strip() for t in tokens_input if t and t.strip()]
+    else:
+        tokens = [t.strip() for t in tokens_input.strip().split('\n') if t.strip()]
     
     conn = get_db()
     # Clear existing tokens
@@ -448,10 +451,13 @@ def get_proxies():
 def save_proxies():
     user_id = session['user_id']
     data = request.json
-    proxies_text = data.get('proxies', '')
+    proxies_input = data.get('proxies', '')
     
-    # Parse proxies (one per line)
-    proxies = [p.strip() for p in proxies_text.strip().split('\n') if p.strip()]
+    # Handle both string and list input
+    if isinstance(proxies_input, list):
+        proxies = [p.strip() for p in proxies_input if p and p.strip()]
+    else:
+        proxies = [p.strip() for p in proxies_input.strip().split('\n') if p.strip()]
     
     conn = get_db()
     # Clear existing proxies
@@ -686,15 +692,12 @@ def admin_overview():
     total_tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens').fetchone()['count']
     total_channels = conn.execute('SELECT COUNT(*) as count FROM user_channels').fetchone()['count']
     
-    # Count active advertisers
-    active_count = len([u for u in advertiser_service.user_advertisers.values() if u.running])
-    
     conn.close()
     
     return jsonify({
         'total_users': total_users,
         'total_messages': total_messages,
-        'active_advertisers': active_count,
+        'active_advertisers': 0,
         'total_tokens': total_tokens,
         'total_channels': total_channels
     })
@@ -726,8 +729,8 @@ def admin_users():
             'last_activity': u['last_activity'],
             'token_count': u['token_count'],
             'channel_count': u['channel_count'],
-            'advertiser_running': advertiser_service.is_user_running(u['id']),
-            'active_tokens': advertiser_service.get_user_status(u['id'])['active_tokens']
+            'advertiser_running': False,
+            'active_tokens': 0
         } for u in users]
     })
 
