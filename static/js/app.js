@@ -523,3 +523,225 @@ window.addEventListener('beforeunload', () => {
         clearInterval(refreshInterval);
     }
 });
+
+/* ============================================================================
+   BOT CONTROL FUNCTIONS
+   Add these to app.js
+   ============================================================================ */
+
+// Bot Status Polling
+let botStatusInterval = null;
+
+// Start polling bot status
+function startBotStatusPolling() {
+    if (botStatusInterval) {
+        clearInterval(botStatusInterval);
+    }
+    
+    // Poll every 5 seconds
+    botStatusInterval = setInterval(() => {
+        refreshBotStatus();
+    }, 5000);
+}
+
+// Stop polling
+function stopBotStatusPolling() {
+    if (botStatusInterval) {
+        clearInterval(botStatusInterval);
+        botStatusInterval = null;
+    }
+}
+
+// Refresh bot status
+async function refreshBotStatus() {
+    try {
+        const response = await fetch('/api/advertiser/status');
+        const data = await response.json();
+        
+        updateBotUI(data);
+    } catch (error) {
+        console.error('Failed to refresh bot status:', error);
+    }
+}
+
+// Update bot UI
+function updateBotUI(status) {
+    const statusBadge = document.getElementById('bot-status-badge');
+    const statusText = document.getElementById('bot-status-text');
+    const startBtn = document.getElementById('start-bot-btn');
+    const stopBtn = document.getElementById('stop-bot-btn');
+    const activeTokens = document.getElementById('bot-active-tokens');
+    const channelsTracked = document.getElementById('bot-channels-tracked');
+    
+    if (status.running) {
+        // Bot is running
+        statusBadge.classList.remove('status-error');
+        statusBadge.classList.add('status-running');
+        statusText.textContent = 'Running';
+        
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'flex';
+        
+        activeTokens.textContent = status.active_tokens || 0;
+        channelsTracked.textContent = status.channels_tracked || 0;
+        
+        // Start polling if not already
+        if (!botStatusInterval) {
+            startBotStatusPolling();
+        }
+    } else {
+        // Bot is stopped
+        statusBadge.classList.remove('status-running', 'status-error');
+        statusText.textContent = 'Stopped';
+        
+        startBtn.style.display = 'flex';
+        stopBtn.style.display = 'none';
+        
+        activeTokens.textContent = '0';
+        channelsTracked.textContent = '0';
+        
+        // Stop polling
+        stopBotStatusPolling();
+    }
+}
+
+// Start bot
+async function startBot() {
+    const startBtn = document.getElementById('start-bot-btn');
+    const originalText = startBtn.innerHTML;
+    
+    // Show loading
+    startBtn.disabled = true;
+    startBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Starting...
+    `;
+    
+    try {
+        const response = await fetch('/api/advertiser/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Bot started successfully!', 'success');
+            
+            // Wait a moment then refresh status
+            setTimeout(() => {
+                refreshBotStatus();
+                refreshStats();
+            }, 1000);
+        } else {
+            showToast(data.message || 'Failed to start bot', 'error');
+            startBtn.disabled = false;
+            startBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Start bot error:', error);
+        showToast('Error starting bot. Please try again.', 'error');
+        startBtn.disabled = false;
+        startBtn.innerHTML = originalText;
+    }
+}
+
+// Stop bot
+async function stopBot() {
+    if (!confirm('Are you sure you want to stop the bot?')) {
+        return;
+    }
+    
+    const stopBtn = document.getElementById('stop-bot-btn');
+    const originalText = stopBtn.innerHTML;
+    
+    // Show loading
+    stopBtn.disabled = true;
+    stopBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Stopping...
+    `;
+    
+    try {
+        const response = await fetch('/api/advertiser/stop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Bot stopped successfully', 'success');
+            
+            // Refresh status
+            setTimeout(() => {
+                refreshBotStatus();
+                refreshStats();
+            }, 500);
+        } else {
+            showToast(data.message || 'Failed to stop bot', 'error');
+            stopBtn.disabled = false;
+            stopBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Stop bot error:', error);
+        showToast('Error stopping bot. Please try again.', 'error');
+        stopBtn.disabled = false;
+        stopBtn.innerHTML = originalText;
+    }
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    // Create toast element if it doesn't exist
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'toast';
+        document.body.appendChild(toast);
+    }
+    
+    // Set message and type
+    toast.textContent = message;
+    toast.className = `toast ${type} show`;
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize bot status on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Check bot status immediately
+    refreshBotStatus();
+    
+    // Also refresh when dashboard page becomes active
+    const dashboardTab = document.querySelector('[data-page="dashboard"]');
+    if (dashboardTab) {
+        dashboardTab.addEventListener('click', () => {
+            setTimeout(refreshBotStatus, 100);
+        });
+    }
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+    stopBotStatusPolling();
+});
+
+/* ============================================================================
+   END BOT CONTROL FUNCTIONS
+   ============================================================================ */
+
