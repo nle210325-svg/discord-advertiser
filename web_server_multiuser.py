@@ -16,14 +16,15 @@ import platform
 from integrated_advertiser import advertiser_service
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('pk5mvs1qex1s8om7qs6qwn3c41merphbr', secrets.token_hex(32))
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
 
-# Session configuration
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+# Session configuration - PERSISTENT SESSIONS
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 30 days
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_PERMANENT'] = True
 
 # ============================================================================
 # ADVERTISER SERVICE STARTUP
