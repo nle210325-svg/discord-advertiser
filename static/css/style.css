@@ -900,3 +900,194 @@ body {
         width: 100%;
     }
 }
+.bot-control-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    animation: slideIn 0.4s var(--transition-normal);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bot-status-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.bot-status-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bot-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-glow);
+}
+
+.bot-icon svg {
+    width: 28px;
+    height: 28px;
+    color: var(--bg-primary);
+    stroke-width: 2.5;
+}
+
+.bot-status-info h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.bot-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 68, 102, 0.1);
+    border: 1px solid rgba(255, 68, 102, 0.3);
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-danger);
+}
+
+.bot-status-badge.status-running {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    color: var(--accent-primary);
+}
+
+.bot-status-badge.status-error {
+    background: rgba(255, 170, 0, 0.1);
+    border-color: rgba(255, 170, 0, 0.3);
+    color: var(--accent-warning);
+}
+
+.bot-status-badge .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.bot-status-badge.status-running .status-dot {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.2);
+    }
+}
+
+.bot-stats-mini {
+    display: flex;
+    gap: 32px;
+}
+
+.bot-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bot-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bot-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--accent-primary);
+}
+
+.bot-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.btn-start-bot {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: var(--bg-primary);
+    font-weight: 600;
+    padding: 14px 28px;
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-start-bot:hover {
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-stop-bot {
+    background: var(--accent-danger);
+    color: white;
+    font-weight: 600;
+    padding: 14px 28px;
+}
+
+.btn-stop-bot:hover {
+    background: #ff2244;
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .bot-control-panel {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .bot-stats-mini {
+        gap: 16px;
+    }
+    
+    .bot-actions {
+        flex-direction: column;
+    }
+    
+    .bot-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .bot-stats-mini {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
