@@ -5,163 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord Advertiser - Control Panel</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <style>
-        /* User Section Styles */
-        .user-section {
-            padding: 20px;
-            background: var(--bg-tertiary);
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .user-avatar svg {
-            width: 24px;
-            height: 24px;
-            color: var(--bg-primary);
-            stroke-width: 2.5;
-        }
-        
-        .user-details {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .user-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .user-role {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .user-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .user-action-btn {
-            flex: 1;
-            padding: 10px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-family: var(--font-display);
-            font-size: 13px;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        }
-        
-        .user-action-btn svg {
-            width: 16px;
-            height: 16px;
-            stroke-width: 2;
-        }
-        
-        .user-action-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-bright);
-            color: var(--text-primary);
-            transform: translateY(-2px);
-        }
-        
-        .user-action-btn.logout-btn:hover {
-            background: rgba(255, 68, 102, 0.15);
-            border-color: var(--accent-danger);
-            color: var(--accent-danger);
-        }
-    </style>
-    <div class="bot-control-panel">
-                <div class="bot-status-section">
-                    <div class="bot-status-header">
-                        <div class="bot-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="11" width="18" height="10" rx="2"/>
-                                <circle cx="12" cy="5" r="2"/>
-                                <path d="M12 7v4"/>
-                                <line x1="8" y1="16" x2="8" y2="16"/>
-                                <line x1="16" y1="16" x2="16" y2="16"/>
-                            </svg>
-                        </div>
-                        <div class="bot-status-info">
-                            <h3>Bot Advertiser</h3>
-                            <div class="bot-status-badge" id="bot-status-badge">
-                                <span class="status-dot"></span>
-                                <span id="bot-status-text">Stopped</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bot-stats-mini">
-                        <div class="bot-stat-item">
-                            <div class="bot-stat-label">Active Tokens</div>
-                            <div class="bot-stat-value" id="bot-active-tokens">0</div>
-                        </div>
-                        <div class="bot-stat-item">
-                            <div class="bot-stat-label">Channels Tracked</div>
-                            <div class="bot-stat-value" id="bot-channels-tracked">0</div>
-                        </div>
-                        <div class="bot-stat-item">
-                            <div class="bot-stat-label">Messages Today</div>
-                            <div class="bot-stat-value" id="bot-messages-today">0</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bot-actions">
-                    <button class="btn btn-success btn-start-bot" id="start-bot-btn" onclick="startBot()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="5 3 19 12 5 21 5 3"/>
-                        </svg>
-                        Start Bot
-                    </button>
-                    <button class="btn btn-danger btn-stop-bot" id="stop-bot-btn" onclick="stopBot()" style="display: none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="6" y="6" width="12" height="12"/>
-                        </svg>
-                        Stop Bot
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshBotStatus()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                        </svg>
-                        Refresh Status
-                    </button>
-                </div>
-            </div>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -238,39 +81,17 @@
         </nav>
         
         <div class="sidebar-footer">
-            <div class="user-section">
+            <div class="user-menu">
+                <div class="user-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
                 <div class="user-info">
-                    <div class="user-avatar">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name" id="sidebar-username">Loading...</div>
-                        <div class="user-role" id="sidebar-role">User</div>
-                    </div>
+                    <div class="user-name" id="sidebar-username">User</div>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
-                
-                <div class="user-actions">
-                    <button class="user-action-btn" id="admin-panel-btn" style="display: none;" onclick="location.href='/admin'" title="Admin Panel">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        </svg>
-                    </button>
-                    <button class="user-action-btn logout-btn" onclick="handleLogout()" title="Logout">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="status-indicator">
-                <div class="status-dot pulsing"></div>
-                <span id="connection-status">Connected</span>
             </div>
         </div>
     </aside>
@@ -367,20 +188,167 @@
                     <div class="card-body">
                         <div class="status-list">
                             <div class="status-item">
-                                <span class="status-label">Proxy Mode</span>
-                                <span class="status-badge" id="proxy-status">Enabled</span>
+                                <span class="status-label">Configuration</span>
+                                <span class="status-value status-success">Complete</span>
                             </div>
                             <div class="status-item">
-                                <span class="status-label">Online Status</span>
-                                <span class="status-badge" id="online-status">Active</span>
+                                <span class="status-label">Tokens</span>
+                                <span class="status-value" id="status-tokens">0 loaded</span>
                             </div>
                             <div class="status-item">
-                                <span class="status-label">Interval</span>
-                                <span class="status-badge" id="interval-status">60 min</span>
+                                <span class="status-label">Channels</span>
+                                <span class="status-value" id="status-channels">0 configured</span>
                             </div>
                             <div class="status-item">
-                                <span class="status-label">Last Activity</span>
-                                <span class="status-badge" id="last-activity">Never</span>
+                                <span class="status-label">Server Status</span>
+                                <span class="status-value status-success">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Quick Stats</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-stats">
+                            <div class="quick-stat-item">
+                                <span class="quick-stat-label">Today</span>
+                                <span class="quick-stat-value" id="today-messages">0</span>
+                            </div>
+                            <div class="quick-stat-item">
+                                <span class="quick-stat-label">This Week</span>
+                                <span class="quick-stat-value" id="week-messages">0</span>
+                            </div>
+                            <div class="quick-stat-item">
+                                <span class="quick-stat-label">Success Rate</span>
+                                <span class="quick-stat-value">100%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot Control Page -->
+        <div class="page" id="bot-control-page">
+            <header class="page-header">
+                <h2>Bot Control Center</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshBotStatus()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh Status
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Large Bot Status Card -->
+            <div class="bot-control-panel bot-control-full">
+                <div class="bot-status-section">
+                    <div class="bot-status-header">
+                        <div class="bot-icon bot-icon-large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="10" rx="2"/>
+                                <circle cx="12" cy="5" r="2"/>
+                                <path d="M12 7v4"/>
+                                <line x1="8" y1="16" x2="8" y2="16"/>
+                                <line x1="16" y1="16" x2="16" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="bot-status-info">
+                            <h3>Discord Advertiser Bot</h3>
+                            <div class="bot-status-badge" id="bot-status-badge-page">
+                                <span class="status-dot"></span>
+                                <span id="bot-status-text-page">Stopped</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bot-stats-grid">
+                        <div class="bot-stat-card">
+                            <div class="bot-stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </div>
+                            <div class="bot-stat-content">
+                                <div class="bot-stat-label">Active Tokens</div>
+                                <div class="bot-stat-value-large" id="bot-active-tokens-page">0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bot-stat-card">
+                            <div class="bot-stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </div>
+                            <div class="bot-stat-content">
+                                <div class="bot-stat-label">Channels Tracked</div>
+                                <div class="bot-stat-value-large" id="bot-channels-tracked-page">0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bot-stat-card">
+                            <div class="bot-stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    <line x1="9" y1="9" x2="15" y2="9"/>
+                                    <line x1="9" y1="13" x2="15" y2="13"/>
+                                </svg>
+                            </div>
+                            <div class="bot-stat-content">
+                                <div class="bot-stat-label">Messages Sent Today</div>
+                                <div class="bot-stat-value-large" id="bot-messages-today-page">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bot-actions-large">
+                    <button class="btn btn-success btn-large btn-start-bot" id="start-bot-btn-page" onclick="startBot()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Start Bot
+                    </button>
+                    <button class="btn btn-danger btn-large btn-stop-bot" id="stop-bot-btn-page" onclick="stopBot()" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="6" y="6" width="12" height="12"/>
+                        </svg>
+                        Stop Bot
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Bot Configuration Status -->
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Configuration Status</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-list">
+                            <div class="status-item" id="config-tokens-status">
+                                <span class="status-label">Discord Tokens</span>
+                                <span class="status-value">Loading...</span>
+                            </div>
+                            <div class="status-item" id="config-channels-status">
+                                <span class="status-label">Channels Configured</span>
+                                <span class="status-value">Loading...</span>
+                            </div>
+                            <div class="status-item" id="config-message-status">
+                                <span class="status-label">Advertisement Message</span>
+                                <span class="status-value">Loading...</span>
+                            </div>
+                            <div class="status-item" id="config-interval-status">
+                                <span class="status-label">Send Interval</span>
+                                <span class="status-value">Loading...</span>
                             </div>
                         </div>
                     </div>
@@ -391,36 +359,32 @@
                         <h3>Quick Actions</h3>
                     </div>
                     <div class="card-body">
-                        <div class="action-grid">
-                            <button class="action-btn" onclick="navigateTo('channels')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="16"/>
-                                    <line x1="8" y1="12" x2="16" y2="12"/>
-                                </svg>
-                                Add Channel
-                            </button>
-                            <button class="action-btn" onclick="navigateTo('servers')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="16"/>
-                                    <line x1="8" y1="12" x2="16" y2="12"/>
-                                </svg>
-                                Add Server
-                            </button>
-                            <button class="action-btn" onclick="navigateTo('tokens')">
+                        <div class="quick-actions">
+                            <button class="btn btn-secondary btn-block" onclick="switchPage('tokens')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                 </svg>
                                 Manage Tokens
                             </button>
-                            <button class="action-btn" onclick="navigateTo('settings')">
+                            <button class="btn btn-secondary btn-block" onclick="switchPage('channels')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Manage Channels
+                            </button>
+                            <button class="btn btn-secondary btn-block" onclick="switchPage('settings')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="3"/>
-                                    <path d="M12 1v6m0 6v6M5.636 5.636l4.243 4.243m4.242 4.242l4.243 4.243m-16.728 0l4.243-4.243m4.242-4.242l4.243-4.243"/>
+                                    <path d="M12 1v6m0 6v6"/>
                                 </svg>
-                                Settings
+                                Configure Settings
+                            </button>
+                            <button class="btn btn-secondary btn-block" onclick="switchPage('logs')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                </svg>
+                                View Activity Logs
                             </button>
                         </div>
                     </div>
@@ -439,7 +403,7 @@
                     <h3>Add Channel</h3>
                 </div>
                 <div class="card-body">
-                    <form id="add-channel-form" class="form-inline">
+                    <form id="add-channel-form" class="form-grid">
                         <div class="form-group">
                             <label>Token Index</label>
                             <input type="number" id="channel-token-index" min="0" placeholder="0" required>
@@ -450,7 +414,7 @@
                         </div>
                         <div class="form-group">
                             <label>Cooldown (minutes)</label>
-                            <input type="number" id="channel-cooldown" min="1" placeholder="60">
+                            <input type="number" id="channel-cooldown" min="1" placeholder="60" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Channel</button>
                     </form>
@@ -476,46 +440,6 @@
             </div>
         </div>
 
-        <!-- Servers Page -->
-        <div class="page" id="servers-page">
-            <header class="page-header">
-                <h2>Server Management</h2>
-            </header>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3>Add Server</h3>
-                </div>
-                <div class="card-body">
-                    <form id="add-server-form" class="form-inline">
-                        <div class="form-group flex-grow">
-                            <label>Server ID</label>
-                            <input type="text" id="server-id" placeholder="123456789" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Server</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3>Configured Servers</h3>
-                    <button class="btn btn-secondary btn-sm" onclick="loadServers()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                        </svg>
-                        Refresh
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div id="servers-list" class="list-container">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Tokens Page -->
         <div class="page" id="tokens-page">
             <header class="page-header">
@@ -528,7 +452,7 @@
                     <span class="badge" id="token-count">0 tokens</span>
                 </div>
                 <div class="card-body">
-                    <textarea id="tokens-textarea" class="code-textarea" placeholder="Paste tokens here (one per line)..." rows="10"></textarea>
+                    <textarea id="tokens-textarea" class="code-textarea form-control" placeholder="Paste tokens here (one per line)..." rows="10"></textarea>
                     <button class="btn btn-primary" onclick="saveTokens()">Save Tokens</button>
                 </div>
             </div>
@@ -539,7 +463,7 @@
                     <span class="badge" id="proxy-count">0 proxies</span>
                 </div>
                 <div class="card-body">
-                    <textarea id="proxies-textarea" class="code-textarea" placeholder="Paste proxies here (one per line)&#10;Format: http://user:pass@ip:port" rows="8"></textarea>
+                    <textarea id="proxies-textarea" class="code-textarea form-control" placeholder="Paste proxies here (one per line)&#10;Format: http://user:pass@ip:port" rows="8"></textarea>
                     <button class="btn btn-primary" onclick="saveProxies()">Save Proxies</button>
                 </div>
             </div>
@@ -557,7 +481,7 @@
                         <h3>Advertisement Message</h3>
                     </div>
                     <div class="card-body">
-                        <textarea id="ad-message" class="code-textarea" placeholder="Enter your advertisement message..." rows="6"></textarea>
+                        <textarea id="ad-message" class="code-textarea form-control" placeholder="Enter your advertisement message..." rows="6"></textarea>
                         <button class="btn btn-primary" onclick="saveSettings()">Save Message</button>
                     </div>
                 </div>
@@ -569,17 +493,17 @@
                     <div class="card-body">
                         <div class="form-group">
                             <label>Interval (minutes)</label>
-                            <input type="number" id="interval-minutes" min="1" placeholder="60">
+                            <input type="number" id="interval-minutes" class="form-control" min="1" placeholder="60">
                         </div>
                         
                         <div class="form-group">
                             <label>Default Cooldown (minutes)</label>
-                            <input type="number" id="default-cooldown" min="1" placeholder="60">
+                            <input type="number" id="default-cooldown" class="form-control" min="1" placeholder="60">
                         </div>
                         
                         <div class="form-group">
                             <label>Online Status</label>
-                            <select id="online-status-select">
+                            <select id="online-status-select" class="form-control">
                                 <option value="online">Online</option>
                                 <option value="idle">Idle</option>
                                 <option value="dnd">Do Not Disturb</option>
@@ -638,48 +562,5 @@
     <div id="toast" class="toast"></div>
 
     <script src="/static/js/app.js"></script>
-    
-    <script>
-        // Load current user info on page load
-        async function loadCurrentUser() {
-            try {
-                const response = await fetch('/api/auth/current');
-                const data = await response.json();
-                
-                if (data.success && data.user) {
-                    document.getElementById('sidebar-username').textContent = data.user.username;
-                    document.getElementById('sidebar-role').textContent = data.user.is_admin ? 'Admin' : 'User';
-                    
-                    // Show admin panel button if user is admin
-                    if (data.user.is_admin) {
-                        document.getElementById('admin-panel-btn').style.display = 'flex';
-                    }
-                } else {
-                    // Not logged in, redirect to login
-                    window.location.href = '/login';
-                }
-            } catch (error) {
-                console.error('Failed to load user:', error);
-                window.location.href = '/login';
-            }
-        }
-        
-        // Handle logout
-        async function handleLogout() {
-            if (!confirm('Are you sure you want to logout?')) return;
-            
-            try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Logout error:', error);
-                // Force redirect anyway
-                window.location.href = '/login';
-            }
-        }
-        
-        // Load user info on page load
-        loadCurrentUser();
-    </script>
 </body>
 </html>
