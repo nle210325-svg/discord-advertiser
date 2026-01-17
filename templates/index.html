@@ -3,443 +3,555 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdvertiserPro - Discord Auto Advertiser</title>
-    <link rel="stylesheet" href="/static/css/landing.css">
+    <title>Outsourced - Discord Auto Advertiser</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-teal: #06f4ad;
+            --brand-orange: #f58624;
+            --brand-pink: #f0485f;
+            --brand-purple: #ab3cbb;
+            --gradient-primary: linear-gradient(135deg, #06f4ad 0%, #ab3cbb 100%);
+            --gradient-full: linear-gradient(135deg, #06f4ad 0%, #f58624 33%, #f0485f 66%, #ab3cbb 100%);
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(6, 244, 173, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(171, 60, 187, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(245, 134, 36, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-full);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-logo-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #000;
+        }
+
+        .nav-logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: var(--gradient-full);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--brand-teal);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(6, 244, 173, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 80px;
+        }
+
+        .trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(6, 244, 173, 0.1);
+            border: 1px solid rgba(6, 244, 173, 0.3);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: var(--brand-teal);
+            margin-bottom: 32px;
+        }
+
+        .trust-badge svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 span {
+            background: var(--gradient-full);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hero-buttons .btn {
+            padding: 16px 32px;
+            font-size: 1rem;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 60px;
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-full);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .section-title p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 244, 173, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-card:nth-child(1) .feature-icon { background: linear-gradient(135deg, rgba(6, 244, 173, 0.2), rgba(6, 244, 173, 0.05)); color: var(--brand-teal); }
+        .feature-card:nth-child(2) .feature-icon { background: linear-gradient(135deg, rgba(245, 134, 36, 0.2), rgba(245, 134, 36, 0.05)); color: var(--brand-orange); }
+        .feature-card:nth-child(3) .feature-icon { background: linear-gradient(135deg, rgba(240, 72, 95, 0.2), rgba(240, 72, 95, 0.05)); color: var(--brand-pink); }
+        .feature-card:nth-child(4) .feature-icon { background: linear-gradient(135deg, rgba(171, 60, 187, 0.2), rgba(171, 60, 187, 0.05)); color: var(--brand-purple); }
+
+        .feature-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 100px 60px;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--gradient-full);
+            border-radius: 24px;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 0;
+        }
+
+        .cta-box > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-box h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .cta-box p {
+            opacity: 0.9;
+            margin-bottom: 32px;
+        }
+
+        .cta-box .btn {
+            background: #fff;
+            color: #000;
+        }
+
+        .cta-box .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 16px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .features {
+                padding: 60px 20px;
+            }
+
+            .cta {
+                padding: 60px 20px;
+            }
+
+            .cta-box {
+                padding: 40px 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="grain-overlay"></div>
-    
     <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-content">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                        </svg>
-                    </div>
-                    <span class="logo-text">ADVERTISER<span class="logo-accent">PRO</span></span>
-                </div>
-                
-                <div class="nav-links">
-                    <a href="#home">Home</a>
-                    <a href="#features">Features</a>
-                    <a href="#pricing">Pricing</a>
-                    <a href="#tutorial">Tutorial</a>
-                </div>
-                
-                <div class="nav-actions">
-                    <a href="/login" class="btn btn-secondary">Login</a>
-                    <a href="/signup" class="btn btn-primary">Get Started</a>
-                </div>
+    <nav>
+        <div class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <rect x="7" y="7" width="10" height="10" rx="1"/>
+                    <rect x="10" y="10" width="4" height="4"/>
+                </svg>
             </div>
+            <span class="nav-logo-text">OUTSOURCED</span>
+        </div>
+        
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#tutorial">Tutorial</a>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="/login" class="btn btn-outline">Login</a>
+            <a href="/signup" class="btn btn-primary">Get Started</a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-bg">
-            <div class="hero-circle hero-circle-1"></div>
-            <div class="hero-circle hero-circle-2"></div>
-            <div class="hero-circle hero-circle-3"></div>
+    <section class="hero">
+        <div class="trust-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Trusted by 500+ Users
         </div>
         
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    Trusted by 500+ Users
-                </div>
-                
-                <h1 class="hero-title">
-                    Automate Your<br>
-                    <span class="gradient-text">Discord Advertisements</span>
-                </h1>
-                
-                <p class="hero-description">
-                    The #1 Discord Auto Advertiser with 99.9% uptime. Powerful automation, 
-                    smart cooldown management, and enterprise-grade reliability.
-                </p>
-                
-                <div class="hero-cta">
-                    <a href="#pricing" class="btn btn-primary btn-lg">
-                        View Pricing
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                            <polyline points="12 5 19 12 12 19"/>
-                        </svg>
-                    </a>
-                    <a href="/dashboard" class="btn btn-secondary btn-lg">
-                        Dashboard
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"/>
-                            <rect x="14" y="3" width="7" height="7"/>
-                            <rect x="14" y="14" width="7" height="7"/>
-                            <rect x="3" y="14" width="7" height="7"/>
-                        </svg>
-                    </a>
-                </div>
-                
-                <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-value">500+</div>
-                        <div class="stat-label">Active Users</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">99.9%</div>
-                        <div class="stat-label">Uptime</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">10M+</div>
-                        <div class="stat-label">Messages Sent</div>
-                    </div>
-                </div>
+        <h1>Automate Your<br><span>Discord Advertisements</span></h1>
+        
+        <p>The #1 Discord Auto Advertiser with 99.9% uptime. Powerful automation, smart cooldown management, and enterprise-grade reliability.</p>
+        
+        <div class="hero-buttons">
+            <a href="/signup" class="btn btn-primary">
+                Get Started
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <a href="/login" class="btn btn-outline">
+                Dashboard
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+            </a>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">500+</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">99.9%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">10M+</div>
+                <div class="stat-label">Messages Sent</div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Powerful Features</h2>
-                <p>Everything you need to dominate Discord advertising</p>
+    <section class="features" id="features">
+        <div class="section-title">
+            <h2>Powerful Features</h2>
+            <p>Everything you need to automate your Discord advertising</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <h3>Smart Scheduling</h3>
+                <p>Set custom intervals and cooldowns for each channel. Our intelligent system ensures your messages are delivered at the perfect time.</p>
             </div>
             
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                    </div>
-                    <h3>Smart Cooldown System</h3>
-                    <p>Automatically manage cooldowns per channel and server. Never get rate-limited again with our intelligent timing system.</p>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="10" rx="2"/>
+                        <circle cx="12" cy="5" r="2"/>
+                        <path d="M12 7v4"/>
+                    </svg>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                        </svg>
-                    </div>
-                    <h3>Auto Advertiser</h3>
-                    <p>Automatically send advertisements across unlimited channels with customizable messages and intervals.</p>
+                <h3>Multi-Token Support</h3>
+                <p>Connect multiple Discord tokens and distribute your workload. Maximize reach while staying under rate limits.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                    </div>
-                    <h3>Multi-Token Support</h3>
-                    <p>Run multiple Discord accounts simultaneously with our advanced token rotation system.</p>
+                <h3>Enterprise Security</h3>
+                <p>Your tokens and data are encrypted and secure. We never store sensitive information in plain text.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M12 1v6m0 6v6M5.636 5.636l4.243 4.243m4.242 4.242l4.243 4.243m-16.728 0l4.243-4.243m4.242-4.242l4.243-4.243"/>
-                        </svg>
-                    </div>
-                    <h3>Status Rotator</h3>
-                    <p>Keep your tokens online with rotating custom status messages and activity types.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"/>
-                            <rect x="14" y="3" width="7" height="7"/>
-                            <rect x="14" y="14" width="7" height="7"/>
-                            <rect x="3" y="14" width="7" height="7"/>
-                        </svg>
-                    </div>
-                    <h3>Web Dashboard</h3>
-                    <p>Manage everything from our beautiful, intuitive web interface. Real-time stats and easy configuration.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        </svg>
-                    </div>
-                    <h3>Proxy Support</h3>
-                    <p>Use proxies to protect your tokens and avoid IP bans. Supports HTTP/HTTPS proxies with authentication.</p>
-                </div>
+                <h3>Real-time Logging</h3>
+                <p>Monitor every message sent with detailed activity logs. Track success rates and optimize your campaigns.</p>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section id="pricing" class="pricing">
-        <div class="container">
-            <div class="section-header">
-                <h2>Simple, Transparent Pricing</h2>
-                <p>Choose the plan that fits your needs</p>
-            </div>
-            
-            <div class="pricing-toggle">
-                <button class="toggle-btn active" data-period="monthly">Monthly</button>
-                <button class="toggle-btn" data-period="lifetime">Lifetime</button>
-            </div>
-            
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3>Starter</h3>
-                        <div class="pricing-price">
-                            <span class="price monthly-price">$5</span>
-                            <span class="price lifetime-price" style="display: none;">$50</span>
-                            <span class="period monthly-period">/month</span>
-                            <span class="period lifetime-period" style="display: none;">one-time</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>1 Token Slot</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Unlimited Channels</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Web Dashboard</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Email Support</span>
-                        </div>
-                    </div>
-                    <a href="/signup" class="btn btn-secondary btn-block">Get Started</a>
-                </div>
-                
-                <div class="pricing-card featured">
-                    <div class="popular-badge">MOST POPULAR</div>
-                    <div class="pricing-header">
-                        <h3>Pro</h3>
-                        <div class="pricing-price">
-                            <span class="price monthly-price">$12</span>
-                            <span class="price lifetime-price" style="display: none;">$120</span>
-                            <span class="period monthly-period">/month</span>
-                            <span class="period lifetime-period" style="display: none;">one-time</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>5 Token Slots</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Unlimited Channels</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Web Dashboard</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Priority Support</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Proxy Support</span>
-                        </div>
-                    </div>
-                    <a href="/signup" class="btn btn-primary btn-block">Get Started</a>
-                </div>
-                
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3>Enterprise</h3>
-                        <div class="pricing-price">
-                            <span class="price monthly-price">$25</span>
-                            <span class="price lifetime-price" style="display: none;">$250</span>
-                            <span class="period monthly-period">/month</span>
-                            <span class="period lifetime-period" style="display: none;">one-time</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Unlimited Tokens</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Unlimited Channels</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Web Dashboard</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>24/7 Priority Support</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Proxy Support</span>
-                        </div>
-                        <div class="feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>API Access</span>
-                        </div>
-                    </div>
-                    <a href="/signup" class="btn btn-secondary btn-block">Get Started</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tutorial Section -->
-    <section id="tutorial" class="tutorial">
-        <div class="container">
-            <div class="section-header">
-                <h2>How It Works</h2>
-                <p>Get started in minutes</p>
-            </div>
-            
-            <div class="tutorial-steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Create Account</h3>
-                        <p>Sign up for free and choose your plan</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Add Tokens</h3>
-                        <p>Add your Discord user tokens to the dashboard</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Configure</h3>
-                        <p>Set up channels, messages, and intervals</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Start Advertising</h3>
-                        <p>Sit back and watch the automation work!</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tutorial-cta">
-                <a href="/signup" class="btn btn-primary btn-lg">Start Free Trial</a>
-            </div>
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-box">
+            <h2>Ready to Automate?</h2>
+            <p>Join hundreds of users who trust Outsourced for their Discord advertising needs.</p>
+            <a href="/signup" class="btn">Start Free Today</a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div class="logo">
-                        <div class="logo-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                            </svg>
-                        </div>
-                        <span class="logo-text">ADVERTISER<span class="logo-accent">PRO</span></span>
-                    </div>
-                    <p class="footer-description">The #1 Discord Auto Advertiser trusted by thousands of users worldwide.</p>
-                </div>
-                
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>Product</h4>
-                        <a href="#features">Features</a>
-                        <a href="#pricing">Pricing</a>
-                        <a href="/dashboard">Dashboard</a>
-                        <a href="#tutorial">Tutorial</a>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4>Support</h4>
-                        <a href="#">Documentation</a>
-                        <a href="#">Discord Server</a>
-                        <a href="#">Contact Us</a>
-                        <a href="#">FAQ</a>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4>Legal</h4>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Refund Policy</a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2024 AdvertiserPro. All rights reserved.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-        </div>
+    <footer>
+        <p>&copy; 2024 Outsourced. All rights reserved.</p>
     </footer>
-
-    <script src="/static/js/landing.js"></script>
 </body>
 </html>
