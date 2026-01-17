@@ -498,21 +498,32 @@ def add_channel():
     data = request.json
     
     token_index = data.get('token_index', 0)
-    channel_id = data.get('channel_id', '').strip()
+    channel_id = data.get('channel_id', '')
     cooldown = data.get('cooldown', 60)
+    
+    # Handle different input types
+    if isinstance(channel_id, int):
+        channel_id = str(channel_id)
+    elif isinstance(channel_id, str):
+        channel_id = channel_id.strip()
+    else:
+        channel_id = str(channel_id) if channel_id else ''
     
     if not channel_id:
         return jsonify({'success': False, 'message': 'Channel ID is required'}), 400
     
-    conn = get_db()
-    conn.execute('INSERT INTO user_channels (user_id, token_index, channel_id, cooldown) VALUES (?, ?, ?, ?)',
-                (user_id, token_index, channel_id, cooldown))
-    conn.commit()
-    conn.close()
-    
-    add_log(user_id, 'INFO', f'Added channel: {channel_id}')
-    
-    return jsonify({'success': True, 'message': 'Channel added'})
+    try:
+        conn = get_db()
+        conn.execute('INSERT INTO user_channels (user_id, token_index, channel_id, cooldown) VALUES (?, ?, ?, ?)',
+                    (user_id, int(token_index), channel_id, int(cooldown)))
+        conn.commit()
+        conn.close()
+        
+        add_log(user_id, 'INFO', f'Added channel: {channel_id}')
+        
+        return jsonify({'success': True, 'message': 'Channel added'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 @app.route('/api/channels/<int:channel_id>', methods=['DELETE'])
 @login_required
