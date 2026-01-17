@@ -768,10 +768,19 @@ async function loadBotControlConfig() {
         const tokensData = await tokensResponse.json();
         const tokenCount = tokensData.tokens ? tokensData.tokens.length : 0;
         
-        // Get channels count
+        // Get channels count - API returns token_channels object
         const channelsResponse = await fetch('/api/channels');
         const channelsData = await channelsResponse.json();
-        const channelCount = channelsData.channels ? channelsData.channels.length : 0;
+        
+        // Count total channels from token_channels object
+        let channelCount = 0;
+        if (channelsData.token_channels) {
+            Object.values(channelsData.token_channels).forEach(channels => {
+                channelCount += channels.length;
+            });
+        } else if (channelsData.channels) {
+            channelCount = channelsData.channels.length;
+        }
         
         // Get config
         const configResponse = await fetch('/api/config');
