@@ -13,8 +13,8 @@ import threading
 import sys
 import platform
 
-# Import advertiser service
-from integrated_advertiser import advertiser_service
+# Import advertiser service (TEMPORARILY DISABLED - Upload integrated_advertiser.py to enable)
+# from integrated_advertiser import advertiser_service
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -38,35 +38,36 @@ os.makedirs('/tmp/flask_sessions', exist_ok=True)
 Session(app)
 
 # ============================================================================
-# ADVERTISER SERVICE STARTUP
+# ADVERTISER SERVICE STARTUP (TEMPORARILY DISABLED)
+# Upload integrated_advertiser.py to GitHub to enable bot service
 # ============================================================================
 
-advertiser_loop = None
-advertiser_thread = None
-
-def start_advertiser_service():
-    """Start the advertiser service in a background thread"""
-    global advertiser_loop, advertiser_thread
-    
-    def run_loop():
-        global advertiser_loop
-        advertiser_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(advertiser_loop)
-        advertiser_loop.run_forever()
-    
-    advertiser_thread = threading.Thread(target=run_loop, daemon=True)
-    advertiser_thread.start()
-    print("✅ Advertiser service started in background")
-
-# Start service when Flask starts
-start_advertiser_service()
-
-def run_async(coro):
-    """Helper to run async functions from sync Flask routes"""
-    if advertiser_loop:
-        future = asyncio.run_coroutine_threadsafe(coro, advertiser_loop)
-        return future.result(timeout=30)
-    return None
+# advertiser_loop = None
+# advertiser_thread = None
+# 
+# def start_advertiser_service():
+#     """Start the advertiser service in a background thread"""
+#     global advertiser_loop, advertiser_thread
+#     
+#     def run_loop():
+#         global advertiser_loop
+#         advertiser_loop = asyncio.new_event_loop()
+#         asyncio.set_event_loop(advertiser_loop)
+#         advertiser_loop.run_forever()
+#     
+#     advertiser_thread = threading.Thread(target=run_loop, daemon=True)
+#     advertiser_thread.start()
+#     print("✅ Advertiser service started in background")
+# 
+# # Start service when Flask starts
+# start_advertiser_service()
+# 
+# def run_async(coro):
+#     """Helper to run async functions from sync Flask routes"""
+#     if advertiser_loop:
+#         future = asyncio.run_coroutine_threadsafe(coro, advertiser_loop)
+#         return future.result(timeout=30)
+#     return None
 
 # ============================================================================
 # DATABASE INITIALIZATION
