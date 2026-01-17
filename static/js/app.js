@@ -88,16 +88,35 @@ async function loadStats() {
         const data = await response.json();
         
         // Update stat cards
-        document.getElementById('stat-messages').textContent = data.total_sent.toLocaleString();
-        document.getElementById('stat-tokens').textContent = `${data.active_tokens} / ${data.total_tokens}`;
-        document.getElementById('stat-channels').textContent = data.total_channels;
-        document.getElementById('stat-uptime').textContent = data.uptime;
+        document.getElementById('stat-messages').textContent = (data.total_sent || 0).toLocaleString();
+        document.getElementById('stat-tokens').textContent = `${data.active_tokens || 0} / ${data.total_tokens || 0}`;
+        document.getElementById('stat-channels').textContent = data.total_channels || 0;
         
-        // Update status items
-        document.getElementById('proxy-status').textContent = data.use_proxies ? 'Enabled' : 'Disabled';
-        document.getElementById('online-status').textContent = data.keep_online ? data.online_status.toUpperCase() : 'Disabled';
-        document.getElementById('interval-status').textContent = `${data.interval_minutes} min`;
-        document.getElementById('last-activity').textContent = data.last_activity ? new Date(data.last_activity).toLocaleTimeString() : 'Never';
+        // Calculate uptime
+        const uptimeEl = document.getElementById('stat-uptime');
+        if (uptimeEl) {
+            if (data.uptime_seconds) {
+                const hours = Math.floor(data.uptime_seconds / 3600);
+                const minutes = Math.floor((data.uptime_seconds % 3600) / 60);
+                uptimeEl.textContent = `${hours}h ${minutes}m`;
+            } else if (data.uptime) {
+                uptimeEl.textContent = data.uptime;
+            } else {
+                uptimeEl.textContent = '0h 0m';
+            }
+        }
+        
+        // Update System Status section
+        const statusTokens = document.getElementById('status-tokens');
+        const statusChannels = document.getElementById('status-channels');
+        if (statusTokens) statusTokens.textContent = `${data.total_tokens || 0} loaded`;
+        if (statusChannels) statusChannels.textContent = `${data.total_channels || 0} configured`;
+        
+        // Update Quick Stats section
+        const todayMessages = document.getElementById('today-messages');
+        const weekMessages = document.getElementById('week-messages');
+        if (todayMessages) todayMessages.textContent = data.messages_today || 0;
+        if (weekMessages) weekMessages.textContent = data.messages_week || 0;
         
     } catch (error) {
         console.error('Failed to load stats:', error);
@@ -542,7 +561,7 @@ function updateBotUI(status) {
         if (channelsTracked) channelsTracked.textContent = channels;
         if (activeTokensPage) activeTokensPage.textContent = tokens;
         if (channelsTrackedPage) channelsTrackedPage.textContent = channels;
-        if (messagesTodayPage) messagesTodayPage.textContent = '0'; // TODO: Implement
+        if (messagesTodayPage) messagesTodayPage.textContent = status.messages_today || 0;
         
         // Start polling if not already
         if (!botStatusInterval) {
