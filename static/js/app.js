@@ -603,10 +603,15 @@ async function startBot() {
         if (data.success) {
             showToast('Bot started successfully!', 'success');
             
+            // Reset button and refresh status
+            startBtn.disabled = false;
+            startBtn.innerHTML = originalText;
+            
             // Wait a moment then refresh status
             setTimeout(() => {
                 refreshBotStatus();
                 loadStats();
+                loadBotControlConfig();
             }, 1000);
         } else {
             showToast(data.message || 'Failed to start bot', 'error');
