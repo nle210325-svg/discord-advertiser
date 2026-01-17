@@ -8,6 +8,11 @@ import secrets
 import sqlite3
 from functools import wraps
 import platform
+import asyncio
+import threading
+
+# Import advertiser service
+from integrated_advertiser import advertiser_service
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -18,6 +23,39 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# ============================================================================
+# ADVERTISER SERVICE STARTUP
+# ============================================================================
+
+advertiser_loop = None
+advertiser_thread = None
+
+def start_advertiser_service():
+    """Start the advertiser service in a background thread"""
+    global advertiser_loop, advertiser_thread
+    
+    def run_loop():
+        global advertiser_loop
+        advertiser_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(advertiser_loop)
+        advertiser_service.set_loop(advertiser_loop)
+        advertiser_loop.run_forever()
+    
+    advertiser_thread = threading.Thread(target=run_loop, daemon=True)
+    advertiser_thread.start()
+    print("✅ Advertiser service started in background")
+
+def run_async(coro):
+    """Helper to run async functions from sync Flask routes"""
+    if advertiser_loop:
+        future = asyncio.run_coroutine_threadsafe(coro, advertiser_loop)
+        try:
+            return future.result(timeout=30)
+        except Exception as e:
+            print(f"Async error: {e}")
+            return None
+    return None
 
 # ============================================================================
 # DATABASE INITIALIZATION
@@ -335,12 +373,16 @@ def get_stats():
     
     conn.close()
     
+    # Get bot status
+    bot_status = advertiser_service.get_user_status(user_id)
+    
     return jsonify({
         'total_sent': stats['total_sent'] if stats else 0,
         'token_count': tokens['count'],
         'channel_count': channels['count'],
-        'active_tokens': 0,
-        'last_activity': stats['last_activity'] if stats else None
+        'active_tokens': bot_status['active_tokens'],
+        'last_activity': stats['last_activity'] if stats else None,
+        'bot_running': bot_status['running']
     })
 
 # ============================================================================
@@ -566,7 +608,7 @@ def get_logs():
     })
 
 # ============================================================================
-# BOT CONTROL API ROUTES (Placeholder - Bot service not enabled yet)
+# BOT CONTROL API ROUTES
 # ============================================================================
 
 @app.route('/api/advertiser/status', methods=['GET'])
@@ -578,27 +620,60 @@ def bot_status():
     channels = conn.execute('SELECT COUNT(*) as count FROM user_channels WHERE user_id = ?', (user_id,)).fetchone()
     conn.close()
     
+    status = advertiser_service.get_user_status(user_id)
+    
     return jsonify({
-        'running': False,
-        'active_tokens': 0,
-        'channels_tracked': channels['count'],
+        'running': status['running'],
+        'active_tokens': status['active_tokens'],
+        'channels_tracked': status['channels_tracked'] or channels['count'],
         'total_tokens': tokens['count'],
-        'message': 'Bot service not enabled yet. Upload integrated_advertiser.py to enable.'
+        'last_send': status['last_send']
     })
 
 @app.route('/api/advertiser/start', methods=['POST'])
 @login_required
 def start_bot():
-    add_log(session['user_id'], 'WARNING', 'Bot start attempted but bot service not enabled')
-    return jsonify({
-        'success': False, 
-        'message': 'Bot service not enabled. Upload integrated_advertiser.py to GitHub to enable bot functionality.'
-    })
+    user_id = session['user_id']
+    
+    # Check if user has tokens and channels
+    conn = get_db()
+    tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens WHERE user_id = ?', (user_id,)).fetchone()
+    channels = conn.execute('SELECT COUNT(*) as count FROM user_channels WHERE user_id = ?', (user_id,)).fetchone()
+    config = conn.execute('SELECT advertisement_message FROM user_configs WHERE user_id = ?', (user_id,)).fetchone()
+    conn.close()
+    
+    if tokens['count'] == 0:
+        return jsonify({'success': False, 'message': 'Please add at least one token first'})
+    
+    if channels['count'] == 0:
+        return jsonify({'success': False, 'message': 'Please add at least one channel first'})
+    
+    if not config or not config['advertisement_message']:
+        return jsonify({'success': False, 'message': 'Please set an advertisement message in Settings first'})
+    
+    # Start the bot
+    try:
+        success = run_async(advertiser_service.start_user_advertiser(user_id))
+        if success:
+            add_log(user_id, 'INFO', 'Bot started successfully')
+            return jsonify({'success': True, 'message': 'Bot started successfully!'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to start bot'})
+    except Exception as e:
+        add_log(user_id, 'ERROR', f'Failed to start bot: {str(e)}')
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 @app.route('/api/advertiser/stop', methods=['POST'])
 @login_required
 def stop_bot():
-    return jsonify({'success': True, 'message': 'No bot running'})
+    user_id = session['user_id']
+    
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+        add_log(user_id, 'INFO', 'Bot stopped')
+        return jsonify({'success': True, 'message': 'Bot stopped'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 # ============================================================================
 # ADMIN API ROUTES
@@ -614,12 +689,15 @@ def admin_overview():
     total_tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens').fetchone()['count']
     total_channels = conn.execute('SELECT COUNT(*) as count FROM user_channels').fetchone()['count']
     
+    # Count active advertisers
+    active_count = len([u for u in advertiser_service.user_advertisers.values() if u.running])
+    
     conn.close()
     
     return jsonify({
         'total_users': total_users,
         'total_messages': total_messages,
-        'active_advertisers': 0,
+        'active_advertisers': active_count,
         'total_tokens': total_tokens,
         'total_channels': total_channels
     })
@@ -651,8 +729,8 @@ def admin_users():
             'last_activity': u['last_activity'],
             'token_count': u['token_count'],
             'channel_count': u['channel_count'],
-            'advertiser_running': False,
-            'active_tokens': 0
+            'advertiser_running': advertiser_service.is_user_running(u['id']),
+            'active_tokens': advertiser_service.get_user_status(u['id'])['active_tokens']
         } for u in users]
     })
 
@@ -697,6 +775,15 @@ def admin_user_detail(user_id):
         'recent_logs': [{'level': l['level'], 'message': l['message'], 'timestamp': l['timestamp']} for l in logs]
     })
 
+@app.route('/api/admin/user/<int:user_id>/stop-advertiser', methods=['POST'])
+@admin_required
+def admin_stop_user_advertiser(user_id):
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+        return jsonify({'success': True, 'message': 'Advertiser stopped'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/admin/user/<int:user_id>/delete', methods=['DELETE'])
 @admin_required
 def admin_delete_user(user_id):
@@ -713,6 +800,12 @@ def admin_delete_user(user_id):
     if user['is_admin']:
         conn.close()
         return jsonify({'success': False, 'error': 'Cannot delete admin users'}), 400
+    
+    # Stop advertiser first
+    try:
+        run_async(advertiser_service.stop_user_advertiser(user_id))
+    except:
+        pass
     
     # Delete all user data
     conn.execute('DELETE FROM activity_logs WHERE user_id = ?', (user_id,))
@@ -763,12 +856,16 @@ def admin_system_info():
         'platform': platform.system(),
         'platform_release': platform.release(),
         'database_size': db_size,
-        'flask_debug': app.debug
+        'flask_debug': app.debug,
+        'active_advertisers': len([u for u in advertiser_service.user_advertisers.values() if u.running])
     })
 
 # ============================================================================
 # INITIALIZATION
 # ============================================================================
+
+# Start advertiser service on import
+start_advertiser_service()
 
 if __name__ == '__main__':
     print("=" * 60)
@@ -786,7 +883,7 @@ if __name__ == '__main__':
     print(f"🛡️ Admin Panel: http://localhost:{port}/admin")
     print(f"🔐 Multi-user authentication enabled")
     print(f"💾 Database: advertiser.db (SQLite)")
-    print(f"🤖 Bot service: DISABLED (upload integrated_advertiser.py to enable)")
+    print(f"🤖 Bot service: ENABLED")
     print(f"🐛 Debug mode: {debug}")
     print("=" * 60)
     
