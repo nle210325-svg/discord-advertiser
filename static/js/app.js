@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadStats();
     loadChannels();
-    loadServers();
     loadTokens();
     loadProxies();
     initForms();
@@ -52,7 +51,6 @@ function navigateTo(page) {
         
         // Load page-specific data
         if (page === 'channels') loadChannels();
-        if (page === 'servers') loadServers();
         if (page === 'tokens') {
             loadTokens();
             loadProxies();
@@ -251,97 +249,6 @@ async function removeChannel(tokenIndex, channelId) {
     } catch (error) {
         console.error('Failed to remove channel:', error);
         showToast('Failed to remove channel', 'error');
-    }
-}
-
-// Load Servers
-async function loadServers() {
-    try {
-        const response = await fetch(`${API_BASE}/servers`);
-        const data = await response.json();
-        
-        const container = document.getElementById('servers-list');
-        container.innerHTML = '';
-        
-        const servers = data.servers || [];
-        
-        if (servers.length === 0) {
-            container.innerHTML = '<div class="list-item"><div class="list-item-content"><div class="list-item-title">No servers configured</div></div></div>';
-            return;
-        }
-        
-        servers.forEach(serverId => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `
-                <div class="list-item-content">
-                    <div class="list-item-title">${serverId}</div>
-                    <div class="list-item-meta">Server ID</div>
-                </div>
-                <div class="list-item-actions">
-                    <button class="btn-icon" onclick="removeServer('${serverId}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            container.appendChild(item);
-        });
-    } catch (error) {
-        console.error('Failed to load servers:', error);
-        showToast('Failed to load servers', 'error');
-    }
-}
-
-// Add Server
-async function addServer(serverId) {
-    try {
-        const response = await fetch(`${API_BASE}/servers/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ server_id: serverId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Server added successfully', 'success');
-            loadServers();
-            loadStats();
-        } else {
-            showToast(result.message || 'Failed to add server', 'error');
-        }
-    } catch (error) {
-        console.error('Failed to add server:', error);
-        showToast('Failed to add server', 'error');
-    }
-}
-
-// Remove Server
-async function removeServer(serverId) {
-    if (!confirm('Remove this server?')) return;
-    
-    try {
-        const response = await fetch(`${API_BASE}/servers/remove`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ server_id: serverId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Server removed', 'success');
-            loadServers();
-            loadStats();
-        } else {
-            showToast(result.message || 'Failed to remove server', 'error');
-        }
-    } catch (error) {
-        console.error('Failed to remove server:', error);
-        showToast('Failed to remove server', 'error');
     }
 }
 
