@@ -373,15 +373,26 @@ def get_stats():
     stats = conn.execute('SELECT * FROM user_stats WHERE user_id = ?', (user_id,)).fetchone()
     tokens = conn.execute('SELECT COUNT(*) as count FROM user_tokens WHERE user_id = ?', (user_id,)).fetchone()
     channels = conn.execute('SELECT COUNT(*) as count FROM user_channels WHERE user_id = ?', (user_id,)).fetchone()
+    config = conn.execute('SELECT * FROM user_configs WHERE user_id = ?', (user_id,)).fetchone()
     
     conn.close()
+    
+    # Get bot status
+    bot_status = advertiser_service.get_user_status(user_id)
     
     return jsonify({
         'total_sent': stats['total_sent'] if stats else 0,
         'token_count': tokens['count'],
+        'total_tokens': tokens['count'],
         'channel_count': channels['count'],
-        'active_tokens': 0,
-        'last_activity': stats['last_activity'] if stats else None
+        'total_channels': channels['count'],
+        'active_tokens': bot_status['active_tokens'],
+        'last_activity': stats['last_activity'] if stats else None,
+        'use_proxies': bool(config['use_proxies']) if config else True,
+        'keep_online': bool(config['keep_tokens_online']) if config else True,
+        'online_status': config['online_status'] if config else 'online',
+        'interval_minutes': config['interval_minutes'] if config else 60,
+        'uptime': 'Running' if bot_status['running'] else 'Stopped'
     })
 
 # ============================================================================
