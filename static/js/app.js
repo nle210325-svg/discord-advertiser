@@ -523,10 +523,9 @@ window.addEventListener('beforeunload', () => {
         clearInterval(refreshInterval);
     }
 });
-
 /* ============================================================================
-   BOT CONTROL FUNCTIONS
-   Add these to app.js
+   ADD THESE FUNCTIONS TO app.js
+   Bot Control Functions - Add at the END of the file
    ============================================================================ */
 
 // Bot Status Polling
@@ -564,8 +563,9 @@ async function refreshBotStatus() {
     }
 }
 
-// Update bot UI
+// Update bot UI - UPDATED VERSION
 function updateBotUI(status) {
+    // Dashboard mini version (if it exists)
     const statusBadge = document.getElementById('bot-status-badge');
     const statusText = document.getElementById('bot-status-text');
     const startBtn = document.getElementById('start-bot-btn');
@@ -573,17 +573,42 @@ function updateBotUI(status) {
     const activeTokens = document.getElementById('bot-active-tokens');
     const channelsTracked = document.getElementById('bot-channels-tracked');
     
+    // Bot Control Page version
+    const statusBadgePage = document.getElementById('bot-status-badge-page');
+    const statusTextPage = document.getElementById('bot-status-text-page');
+    const startBtnPage = document.getElementById('start-bot-btn-page');
+    const stopBtnPage = document.getElementById('stop-bot-btn-page');
+    const activeTokensPage = document.getElementById('bot-active-tokens-page');
+    const channelsTrackedPage = document.getElementById('bot-channels-tracked-page');
+    const messagesTodayPage = document.getElementById('bot-messages-today-page');
+    
     if (status.running) {
         // Bot is running
-        statusBadge.classList.remove('status-error');
-        statusBadge.classList.add('status-running');
-        statusText.textContent = 'Running';
+        if (statusBadge) {
+            statusBadge.classList.remove('status-error');
+            statusBadge.classList.add('status-running');
+            statusText.textContent = 'Running';
+        }
         
-        startBtn.style.display = 'none';
-        stopBtn.style.display = 'flex';
+        if (statusBadgePage) {
+            statusBadgePage.classList.remove('status-error');
+            statusBadgePage.classList.add('status-running');
+            statusTextPage.textContent = 'Running';
+        }
         
-        activeTokens.textContent = status.active_tokens || 0;
-        channelsTracked.textContent = status.channels_tracked || 0;
+        if (startBtn) startBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'flex';
+        if (startBtnPage) startBtnPage.style.display = 'none';
+        if (stopBtnPage) stopBtnPage.style.display = 'flex';
+        
+        const tokens = status.active_tokens || 0;
+        const channels = status.channels_tracked || 0;
+        
+        if (activeTokens) activeTokens.textContent = tokens;
+        if (channelsTracked) channelsTracked.textContent = channels;
+        if (activeTokensPage) activeTokensPage.textContent = tokens;
+        if (channelsTrackedPage) channelsTrackedPage.textContent = channels;
+        if (messagesTodayPage) messagesTodayPage.textContent = '0'; // TODO: Implement
         
         // Start polling if not already
         if (!botStatusInterval) {
@@ -591,14 +616,26 @@ function updateBotUI(status) {
         }
     } else {
         // Bot is stopped
-        statusBadge.classList.remove('status-running', 'status-error');
-        statusText.textContent = 'Stopped';
+        if (statusBadge) {
+            statusBadge.classList.remove('status-running', 'status-error');
+            statusText.textContent = 'Stopped';
+        }
         
-        startBtn.style.display = 'flex';
-        stopBtn.style.display = 'none';
+        if (statusBadgePage) {
+            statusBadgePage.classList.remove('status-running', 'status-error');
+            statusTextPage.textContent = 'Stopped';
+        }
         
-        activeTokens.textContent = '0';
-        channelsTracked.textContent = '0';
+        if (startBtn) startBtn.style.display = 'flex';
+        if (stopBtn) stopBtn.style.display = 'none';
+        if (startBtnPage) startBtnPage.style.display = 'flex';
+        if (stopBtnPage) stopBtnPage.style.display = 'none';
+        
+        if (activeTokens) activeTokens.textContent = '0';
+        if (channelsTracked) channelsTracked.textContent = '0';
+        if (activeTokensPage) activeTokensPage.textContent = '0';
+        if (channelsTrackedPage) channelsTrackedPage.textContent = '0';
+        if (messagesTodayPage) messagesTodayPage.textContent = '0';
         
         // Stop polling
         stopBotStatusPolling();
@@ -607,7 +644,9 @@ function updateBotUI(status) {
 
 // Start bot
 async function startBot() {
-    const startBtn = document.getElementById('start-bot-btn');
+    const startBtn = document.getElementById('start-bot-btn-page') || document.getElementById('start-bot-btn');
+    if (!startBtn) return;
+    
     const originalText = startBtn.innerHTML;
     
     // Show loading
@@ -636,7 +675,7 @@ async function startBot() {
             // Wait a moment then refresh status
             setTimeout(() => {
                 refreshBotStatus();
-                refreshStats();
+                loadStats();
             }, 1000);
         } else {
             showToast(data.message || 'Failed to start bot', 'error');
@@ -657,7 +696,9 @@ async function stopBot() {
         return;
     }
     
-    const stopBtn = document.getElementById('stop-bot-btn');
+    const stopBtn = document.getElementById('stop-bot-btn-page') || document.getElementById('stop-bot-btn');
+    if (!stopBtn) return;
+    
     const originalText = stopBtn.innerHTML;
     
     // Show loading
@@ -686,7 +727,7 @@ async function stopBot() {
             // Refresh status
             setTimeout(() => {
                 refreshBotStatus();
-                refreshStats();
+                loadStats();
             }, 500);
         } else {
             showToast(data.message || 'Failed to stop bot', 'error');
@@ -722,15 +763,61 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// Helper function to switch pages
+function switchPage(pageName) {
+    const navItem = document.querySelector(`[data-page="${pageName}"]`);
+    if (navItem) {
+        navItem.click();
+    }
+}
+
+// Check auth and load user info
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/auth/current');
+        const data = await response.json();
+        
+        if (data.user) {
+            // Update username in sidebar
+            const usernameEl = document.getElementById('sidebar-username');
+            if (usernameEl) {
+                usernameEl.textContent = data.user.username;
+            }
+            return true;
+        } else {
+            window.location.href = '/login';
+            return false;
+        }
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/login';
+        return false;
+    }
+}
+
+// Logout function
+async function logout() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = '/login';
+    }
+}
+
 // Initialize bot status on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Check authentication
+    checkAuth();
+    
     // Check bot status immediately
     refreshBotStatus();
     
-    // Also refresh when dashboard page becomes active
-    const dashboardTab = document.querySelector('[data-page="dashboard"]');
-    if (dashboardTab) {
-        dashboardTab.addEventListener('click', () => {
+    // Also refresh when bot control page becomes active
+    const botControlTab = document.querySelector('[data-page="bot-control"]');
+    if (botControlTab) {
+        botControlTab.addEventListener('click', () => {
             setTimeout(refreshBotStatus, 100);
         });
     }
@@ -741,7 +828,12 @@ window.addEventListener('beforeunload', () => {
     stopBotStatusPolling();
 });
 
-/* ============================================================================
-   END BOT CONTROL FUNCTIONS
-   ============================================================================ */
-
+// Add spin animation for loading spinners
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
