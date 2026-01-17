@@ -1,0 +1,48 @@
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+advertiser.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# User data files (stored in database instead)
+tokens.txt
+proxies.txt
+config.json
+
+# Environment variables
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Local development
+local_settings.py

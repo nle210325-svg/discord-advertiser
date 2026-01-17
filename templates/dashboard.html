@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Advertiser - Control Panel</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                </svg>
+            </div>
+            <h1>ADVERTISER<span class="logo-accent">PRO</span></h1>
+        </div>
+        
+        <nav class="nav-menu">
+            <button class="nav-item active" data-page="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </button>
+            
+            <button class="nav-item" data-page="channels">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Channels
+            </button>
+            
+            <button class="nav-item" data-page="servers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                Servers
+            </button>
+            
+            <button class="nav-item" data-page="tokens">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Tokens
+            </button>
+            
+            <button class="nav-item" data-page="settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M5.636 5.636l4.243 4.243m4.242 4.242l4.243 4.243m-16.728 0l4.243-4.243m4.242-4.242l4.243-4.243"/>
+                </svg>
+                Settings
+            </button>
+            
+            <button class="nav-item" data-page="logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                Activity Logs
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="status-indicator">
+                <div class="status-dot pulsing"></div>
+                <span id="connection-status">Connected</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard-page">
+            <header class="page-header">
+                <h2>Performance Dashboard</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshStats()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+            
+            <div class="stats-grid">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Messages Sent</div>
+                        <div class="stat-value" id="stat-messages">0</div>
+                        <div class="stat-trend positive">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                <polyline points="17 6 23 6 23 12"/>
+                            </svg>
+                            Active
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Active Tokens</div>
+                        <div class="stat-value" id="stat-tokens">0 / 0</div>
+                        <div class="stat-trend">Online</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            <line x1="9" y1="9" x2="15" y2="9"/>
+                            <line x1="9" y1="13" x2="15" y2="13"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Channels</div>
+                        <div class="stat-value" id="stat-channels">0</div>
+                        <div class="stat-trend">Configured</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-info">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value" id="stat-uptime">0h 0m</div>
+                        <div class="stat-trend">Running</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>System Status</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-list">
+                            <div class="status-item">
+                                <span class="status-label">Proxy Mode</span>
+                                <span class="status-badge" id="proxy-status">Enabled</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Online Status</span>
+                                <span class="status-badge" id="online-status">Active</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Interval</span>
+                                <span class="status-badge" id="interval-status">60 min</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Last Activity</span>
+                                <span class="status-badge" id="last-activity">Never</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="action-grid">
+                            <button class="action-btn" onclick="navigateTo('channels')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="16"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                                Add Channel
+                            </button>
+                            <button class="action-btn" onclick="navigateTo('servers')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="16"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                                Add Server
+                            </button>
+                            <button class="action-btn" onclick="navigateTo('tokens')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                Manage Tokens
+                            </button>
+                            <button class="action-btn" onclick="navigateTo('settings')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 1v6m0 6v6M5.636 5.636l4.243 4.243m4.242 4.242l4.243 4.243m-16.728 0l4.243-4.243m4.242-4.242l4.243-4.243"/>
+                                </svg>
+                                Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channels Page -->
+        <div class="page" id="channels-page">
+            <header class="page-header">
+                <h2>Channel Management</h2>
+            </header>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add Channel</h3>
+                </div>
+                <div class="card-body">
+                    <form id="add-channel-form" class="form-inline">
+                        <div class="form-group">
+                            <label>Token Index</label>
+                            <input type="number" id="channel-token-index" min="0" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Channel ID</label>
+                            <input type="text" id="channel-id" placeholder="123456789" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cooldown (minutes)</label>
+                            <input type="number" id="channel-cooldown" min="1" placeholder="60">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Channel</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Configured Channels</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="loadChannels()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="channels-list" class="list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servers Page -->
+        <div class="page" id="servers-page">
+            <header class="page-header">
+                <h2>Server Management</h2>
+            </header>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add Server</h3>
+                </div>
+                <div class="card-body">
+                    <form id="add-server-form" class="form-inline">
+                        <div class="form-group flex-grow">
+                            <label>Server ID</label>
+                            <input type="text" id="server-id" placeholder="123456789" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Server</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Configured Servers</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="loadServers()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="servers-list" class="list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tokens Page -->
+        <div class="page" id="tokens-page">
+            <header class="page-header">
+                <h2>Token Management</h2>
+            </header>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Manage Tokens</h3>
+                    <span class="badge" id="token-count">0 tokens</span>
+                </div>
+                <div class="card-body">
+                    <textarea id="tokens-textarea" class="code-textarea" placeholder="Paste tokens here (one per line)..." rows="10"></textarea>
+                    <button class="btn btn-primary" onclick="saveTokens()">Save Tokens</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Proxy Configuration</h3>
+                    <span class="badge" id="proxy-count">0 proxies</span>
+                </div>
+                <div class="card-body">
+                    <textarea id="proxies-textarea" class="code-textarea" placeholder="Paste proxies here (one per line)&#10;Format: http://user:pass@ip:port" rows="8"></textarea>
+                    <button class="btn btn-primary" onclick="saveProxies()">Save Proxies</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" id="settings-page">
+            <header class="page-header">
+                <h2>Configuration Settings</h2>
+            </header>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Advertisement Message</h3>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="ad-message" class="code-textarea" placeholder="Enter your advertisement message..." rows="6"></textarea>
+                        <button class="btn btn-primary" onclick="saveSettings()">Save Message</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>System Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Interval (minutes)</label>
+                            <input type="number" id="interval-minutes" min="1" placeholder="60">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Default Cooldown (minutes)</label>
+                            <input type="number" id="default-cooldown" min="1" placeholder="60">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Online Status</label>
+                            <select id="online-status-select">
+                                <option value="online">Online</option>
+                                <option value="idle">Idle</option>
+                                <option value="dnd">Do Not Disturb</option>
+                                <option value="invisible">Invisible</option>
+                            </select>
+                        </div>
+                        
+                        <div class="toggle-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="use-proxies">
+                                <span class="toggle-slider"></span>
+                                Use Proxies
+                            </label>
+                            
+                            <label class="toggle-label">
+                                <input type="checkbox" id="keep-online">
+                                <span class="toggle-slider"></span>
+                                Keep Tokens Online
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div class="page" id="logs-page">
+            <header class="page-header">
+                <h2>Activity Logs</h2>
+                <button class="btn btn-secondary" onclick="loadLogs()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Refresh
+                </button>
+            </header>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div id="logs-container" class="logs-container">
+                        <div class="log-entry log-info">
+                            <span class="log-time">00:00:00</span>
+                            <span class="log-level">INFO</span>
+                            <span class="log-message">Dashboard loaded successfully</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
