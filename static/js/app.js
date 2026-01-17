@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadStats();
     loadChannels();
-    loadServers();
     loadTokens();
     loadProxies();
     initForms();
@@ -52,7 +51,6 @@ function navigateTo(page) {
         
         // Load page-specific data
         if (page === 'channels') loadChannels();
-        if (page === 'servers') loadServers();
         if (page === 'tokens') {
             loadTokens();
             loadProxies();
@@ -254,95 +252,22 @@ async function removeChannel(tokenIndex, channelId) {
     }
 }
 
-// Load Servers
+// Load Servers (deprecated - silently ignore)
 async function loadServers() {
-    try {
-        const response = await fetch(`${API_BASE}/servers`);
-        const data = await response.json();
-        
-        const container = document.getElementById('servers-list');
-        container.innerHTML = '';
-        
-        const servers = data.servers || [];
-        
-        if (servers.length === 0) {
-            container.innerHTML = '<div class="list-item"><div class="list-item-content"><div class="list-item-title">No servers configured</div></div></div>';
-            return;
-        }
-        
-        servers.forEach(serverId => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `
-                <div class="list-item-content">
-                    <div class="list-item-title">${serverId}</div>
-                    <div class="list-item-meta">Server ID</div>
-                </div>
-                <div class="list-item-actions">
-                    <button class="btn-icon" onclick="removeServer('${serverId}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            container.appendChild(item);
-        });
-    } catch (error) {
-        console.error('Failed to load servers:', error);
-        showToast('Failed to load servers', 'error');
-    }
+    // Servers feature removed - do nothing
+    return;
 }
 
-// Add Server
+// Add Server (deprecated)
 async function addServer(serverId) {
-    try {
-        const response = await fetch(`${API_BASE}/servers/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ server_id: serverId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Server added successfully', 'success');
-            loadServers();
-            loadStats();
-        } else {
-            showToast(result.message || 'Failed to add server', 'error');
-        }
-    } catch (error) {
-        console.error('Failed to add server:', error);
-        showToast('Failed to add server', 'error');
-    }
+    console.log('Servers feature not available');
+    return;
 }
 
-// Remove Server
+// Remove Server (deprecated)
 async function removeServer(serverId) {
-    if (!confirm('Remove this server?')) return;
-    
-    try {
-        const response = await fetch(`${API_BASE}/servers/remove`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ server_id: serverId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Server removed', 'success');
-            loadServers();
-            loadStats();
-        } else {
-            showToast(result.message || 'Failed to remove server', 'error');
-        }
-    } catch (error) {
-        console.error('Failed to remove server:', error);
-        showToast('Failed to remove server', 'error');
-    }
+    console.log('Servers feature not available');
+    return;
 }
 
 // Load Tokens
@@ -481,28 +406,34 @@ async function loadLogs() {
 // Initialize Forms
 function initForms() {
     // Add Channel Form
-    document.getElementById('add-channel-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const tokenIndex = parseInt(document.getElementById('channel-token-index').value);
-        const channelId = document.getElementById('channel-id').value.trim();
-        const cooldown = document.getElementById('channel-cooldown').value;
-        
-        if (channelId) {
-            addChannel(tokenIndex, channelId, cooldown ? parseInt(cooldown) : null);
-            e.target.reset();
-        }
-    });
+    const channelForm = document.getElementById('add-channel-form');
+    if (channelForm) {
+        channelForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const tokenIndex = parseInt(document.getElementById('channel-token-index').value);
+            const channelId = document.getElementById('channel-id').value.trim();
+            const cooldown = document.getElementById('channel-cooldown').value;
+            
+            if (channelId) {
+                addChannel(tokenIndex, channelId, cooldown ? parseInt(cooldown) : null);
+                e.target.reset();
+            }
+        });
+    }
     
-    // Add Server Form
-    document.getElementById('add-server-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const serverId = document.getElementById('server-id').value.trim();
-        
-        if (serverId) {
-            addServer(serverId);
-            e.target.reset();
-        }
-    });
+    // Add Server Form (optional - may not exist)
+    const serverForm = document.getElementById('add-server-form');
+    if (serverForm) {
+        serverForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const serverId = document.getElementById('server-id').value.trim();
+            
+            if (serverId) {
+                addServer(serverId);
+                e.target.reset();
+            }
+        });
+    }
 }
 
 // Toast Notifications
@@ -819,8 +750,87 @@ document.addEventListener('DOMContentLoaded', () => {
     if (botControlTab) {
         botControlTab.addEventListener('click', () => {
             setTimeout(refreshBotStatus, 100);
+            setTimeout(loadBotControlConfig, 100);
         });
     }
+});
+
+// Load Bot Control Configuration Status
+async function loadBotControlConfig() {
+    try {
+        // Get tokens count
+        const tokensResponse = await fetch('/api/tokens');
+        const tokensData = await tokensResponse.json();
+        const tokenCount = tokensData.tokens ? tokensData.tokens.length : 0;
+        
+        // Get channels count
+        const channelsResponse = await fetch('/api/channels');
+        const channelsData = await channelsResponse.json();
+        const channelCount = channelsData.channels ? channelsData.channels.length : 0;
+        
+        // Get config
+        const configResponse = await fetch('/api/config');
+        const configData = await configResponse.json();
+        const hasMessage = configData.advertisement_message && configData.advertisement_message.trim().length > 0;
+        const interval = configData.interval_minutes || 60;
+        
+        // Update Configuration Status section
+        const tokensStatus = document.getElementById('config-tokens-status');
+        const channelsStatus = document.getElementById('config-channels-status');
+        const messageStatus = document.getElementById('config-message-status');
+        const intervalStatus = document.getElementById('config-interval-status');
+        
+        if (tokensStatus) {
+            const valueEl = tokensStatus.querySelector('.status-value');
+            if (valueEl) {
+                valueEl.textContent = tokenCount > 0 ? `${tokenCount} configured` : 'Not configured';
+                valueEl.style.color = tokenCount > 0 ? 'var(--accent-primary)' : 'var(--text-muted)';
+            }
+        }
+        
+        if (channelsStatus) {
+            const valueEl = channelsStatus.querySelector('.status-value');
+            if (valueEl) {
+                valueEl.textContent = channelCount > 0 ? `${channelCount} configured` : 'Not configured';
+                valueEl.style.color = channelCount > 0 ? 'var(--accent-primary)' : 'var(--text-muted)';
+            }
+        }
+        
+        if (messageStatus) {
+            const valueEl = messageStatus.querySelector('.status-value');
+            if (valueEl) {
+                valueEl.textContent = hasMessage ? 'Configured' : 'Not set';
+                valueEl.style.color = hasMessage ? 'var(--accent-primary)' : 'var(--text-muted)';
+            }
+        }
+        
+        if (intervalStatus) {
+            const valueEl = intervalStatus.querySelector('.status-value');
+            if (valueEl) {
+                valueEl.textContent = `${interval} minutes`;
+                valueEl.style.color = 'var(--accent-primary)';
+            }
+        }
+        
+        // Also update the stats on bot control page
+        const activeTokensPage = document.getElementById('bot-active-tokens-page');
+        const channelsTrackedPage = document.getElementById('bot-channels-tracked-page');
+        
+        if (activeTokensPage && !document.querySelector('.status-running')) {
+            activeTokensPage.textContent = tokenCount;
+        }
+        if (channelsTrackedPage && !document.querySelector('.status-running')) {
+            channelsTrackedPage.textContent = channelCount;
+        }
+        
+    } catch (error) {
+        console.error('Failed to load bot control config:', error);
+    }
+}
+
+// Call loadBotControlConfig on page load
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(loadBotControlConfig, 500);
 });
 
 // Clean up on page unload
