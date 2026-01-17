@@ -1,6 +1,5 @@
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from flask_cors import CORS
-from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -20,22 +19,11 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
 
-# Session configuration - DATABASE BACKED (100% PERSISTENT)
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = True
+# Session configuration - 30 day cookies
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_KEY_PREFIX'] = 'advertiser:'
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_sessions'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False
-
-# Create session directory
-os.makedirs('/tmp/flask_sessions', exist_ok=True)
-
-# Initialize Flask-Session
-Session(app)
 
 # ============================================================================
 # ADVERTISER SERVICE STARTUP
