@@ -849,6 +849,20 @@ def get_stats():
     proxy_count = conn.execute('SELECT COUNT(*) as count FROM user_proxies WHERE user_id = ?', 
                                (user_id,)).fetchone()['count']
     
+    # Get messages sent today
+    today = datetime.now().strftime('%Y-%m-%d')
+    messages_today = conn.execute(
+        "SELECT COUNT(*) as count FROM activity_logs WHERE user_id = ? AND level = 'SUCCESS' AND timestamp LIKE ?",
+        (user_id, f'{today}%')
+    ).fetchone()['count']
+    
+    # Get messages sent this week
+    week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+    messages_week = conn.execute(
+        "SELECT COUNT(*) as count FROM activity_logs WHERE user_id = ? AND level = 'SUCCESS' AND timestamp >= ?",
+        (user_id, week_ago)
+    ).fetchone()['count']
+    
     config = get_user_config(user_id)
     
     conn.close()
@@ -856,7 +870,14 @@ def get_stats():
     # Get advertiser status
     advertiser_status = advertiser_service.get_user_status(user_id)
     
-    uptime = "0h 0m"
+    # Calculate uptime if bot is running
+    uptime_seconds = 0
+    if advertiser_status['running'] and advertiser_status.get('last_send'):
+        try:
+            start_time = datetime.fromisoformat(advertiser_status['last_send'])
+            uptime_seconds = int((datetime.now() - start_time).total_seconds())
+        except:
+            uptime_seconds = 0
     
     return jsonify({
         'total_sent': stats['total_sent'] if stats else 0,
@@ -865,7 +886,9 @@ def get_stats():
         'total_channels': channel_count,
         'total_servers': server_count,
         'proxy_count': proxy_count,
-        'uptime': uptime,
+        'uptime_seconds': uptime_seconds,
+        'messages_today': messages_today,
+        'messages_week': messages_week,
         'last_activity': stats['last_activity'] if stats and stats['last_activity'] else None,
         'interval_minutes': config['interval_minutes'],
         'use_proxies': bool(config['use_proxies']),
@@ -982,6 +1005,18 @@ def get_advertiser_status():
     
     try:
         status = advertiser_service.get_user_status(user_id)
+        
+        # Get messages sent today from database
+        conn = get_db()
+        today = datetime.now().strftime('%Y-%m-%d')
+        logs_today = conn.execute(
+            "SELECT COUNT(*) as count FROM activity_logs WHERE user_id = ? AND level = 'SUCCESS' AND timestamp LIKE ?",
+            (user_id, f'{today}%')
+        ).fetchone()
+        conn.close()
+        
+        status['messages_today'] = logs_today['count'] if logs_today else 0
+        
         return jsonify({
             'success': True,
             'status': status
